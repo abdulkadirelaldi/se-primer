@@ -4,22 +4,25 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx --env-file-if-exists=.env.local server.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p cypress",
     "cy:open": "cypress open",
-    "test:e2e": "start-server-and-test dev http://localhost:5173 \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts\"",
-    "demo:video": "start-server-and-test dev http://localhost:5173 \"cypress run --spec cypress/e2e/demo.cy.ts --config video=true\"",
-    "eval": "tsx eval/run-eval.ts",
-    "eval:report": "tsx eval/report.ts"
+    "test:e2e": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts\"",
+    "demo:video": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/demo.cy.ts --config video=true\"",
+    "eval": "tsx --env-file-if-exists=.env.local eval/run-eval.ts",
+    "eval:report": "tsx eval/report.ts",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env.local server.ts"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
+    "express": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

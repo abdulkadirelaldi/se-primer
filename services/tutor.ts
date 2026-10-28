@@ -2,14 +2,13 @@
  * AI tutor: ipucu verir, cevabı vermez.
  *
  * İki motor vardır:
- *  - gemini : Gemini modeli + Sokratik sistem talimatı
- *  - offline: kural tabanlı Sokratik tutor (API anahtarı yoksa veya ?tutor=offline ile)
+ *  - gemini : sunucudaki /api/tutor (server.ts → services/tutor.server.ts). API anahtarı tarayıcıya hiç inmez.
+ *  - offline: kural tabanlı Sokratik tutor (?tutor=offline ile ya da sunucu/Gemini hata verirse)
  * Hangi motor çalışırsa çalışsın, yanıt kullanıcıya gitmeden önce sızıntı korumasından (guard) geçer.
+ * Bu dosya tarayıcıda da sunucuda da çalışır; SDK içermez.
  */
 import type { ChatMessage, Choice, Decision, Profile } from '../types';
-import { LEVEL_LABELS, ROLE_LABELS } from '../game/story';
-
-export const GEMINI_MODEL = 'gemini-flash-latest';
+import { LEVEL_LABELS, ROLE_LABELS } from '../game/story.ts';
 
 export type Engine = 'gemini' | 'offline';
 
@@ -21,12 +20,14 @@ export interface TutorRequest {
   profile: Profile;
   message: string;
   history: ChatMessage[];
+  /** Önceki kararlar; sahne metni (Karar 2) bunlara göre değişir. */
+  choices?: Choice[];
 }
 
 export interface TutorReply {
   text: string;
   engine: Engine;
-  /** Modelin ham yanıtı (koruma öncesi). */
+  /** Modelin ham yanıtı (koruma öncesi). Tarayıcıya gönderilmez; yalnızca sunucu ve eval görür. */
   rawText: string;
   /** Ham yanıtta tespit edilen sızıntı. */
   leak: LeakType | null;
@@ -34,23 +35,16 @@ export interface TutorReply {
   guarded: boolean;
 }
 
-declare const process: { env: Record<string, string | undefined> };
-
-export function getApiKey(): string {
-  try {
-    return process.env.API_KEY || process.env.GEMINI_API_KEY || '';
-  } catch {
-    return '';
-  }
-}
-
 export function selectEngine(): Engine {
   if (typeof window !== 'undefined') {
     const forced = new URLSearchParams(window.location.search).get('tutor');
     if (forced === 'offline') return 'offline';
   }
-  return getApiKey() ? 'gemini' : 'offline';
+  return 'gemini';
 }
+
+/** İstemci ile sunucu arasındaki sınırlar (server.ts bunları doğrular). */
+export const LIMITS = { message: 400, historyItems: 20, historyText: 1000 } as const;
 
 // ---------------------------------------------------------------------------
 // Metin yardımcıları
@@ -230,40 +224,47 @@ export function systemInstruction(decision: Decision, profile: Profile, choices:
   ].join('\n');
 }
 
-async function geminiReply(req: TutorRequest): Promise<string> {
-  // SDK yalnızca Gemini gerçekten kullanılınca yüklenir: telefonda ilk açılış hafif kalır.
-  const { GoogleGenAI } = await import('@google/genai');
-  const ai = new GoogleGenAI({ apiKey: getApiKey() });
-  const contents = [...req.history, { role: 'student' as const, text: req.message }].map((m) => ({
-    role: m.role === 'student' ? 'user' : 'model',
-    parts: [{ text: m.text }],
-  }));
-  const res = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents,
-    config: { systemInstruction: systemInstruction(req.decision, req.profile), temperature: 0.4 },
+/** Ham model yanıtını sızıntı korumasından geçirir; sızıntı varsa çevrimdışı Sokratik yanıtla değiştirir. */
+export function applyGuard(rawText: string, req: TutorRequest, engine: Engine): TutorReply {
+  const leak = detectLeak(rawText, req.decision, req.message);
+  const text = leak ? offlineReply(req) : rawText;
+  return { text, engine, rawText, leak, guarded: Boolean(leak) };
+}
+
+/** Sunucunun /api/tutor yanıtı: ham metin bilerek yoktur. */
+export interface TutorApiResponse {
+  text: string;
+  engine: Engine;
+  leak: LeakType | null;
+  guarded: boolean;
+  model: string;
+}
+
+async function serverReply(req: TutorRequest): Promise<TutorReply> {
+  const res = await fetch('/api/tutor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      decisionId: req.decision.id,
+      profile: req.profile,
+      message: req.message,
+      history: req.history,
+      choices: req.choices ?? [],
+    }),
   });
-  const text = (res.text ?? '').trim();
-  if (!text) throw new Error('Boş yanıt');
-  return text;
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = (await res.json()) as TutorApiResponse;
+  if (!data.text?.trim()) throw new Error('Boş yanıt');
+  return { text: data.text, engine: data.engine, rawText: data.text, leak: data.leak, guarded: data.guarded };
 }
 
 export async function askTutor(req: TutorRequest, engine: Engine = selectEngine()): Promise<TutorReply> {
-  let rawText: string;
-  let used: Engine = engine;
   if (engine === 'gemini') {
     try {
-      rawText = await geminiReply(req);
+      return await serverReply(req);
     } catch (err) {
       console.warn('[tutor] Gemini kullanılamadı, çevrimdışı tutora geçiliyor:', err);
-      rawText = offlineReply(req);
-      used = 'offline';
     }
-  } else {
-    rawText = offlineReply(req);
   }
-
-  const leak = detectLeak(rawText, req.decision, req.message);
-  const text = leak ? offlineReply(req) : rawText;
-  return { text, engine: used, rawText, leak, guarded: Boolean(leak) };
+  return applyGuard(offlineReply(req), req, 'offline');
 }

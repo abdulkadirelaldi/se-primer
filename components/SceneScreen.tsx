@@ -91,7 +91,7 @@ export default function SceneScreen({ step, profile, choices, timedOut, showFeed
               ))}
             </div>
 
-            <TutorPanel decision={decision} profile={profile} />
+            <TutorPanel decision={decision} profile={profile} choices={previous} />
           </>
         )}
 

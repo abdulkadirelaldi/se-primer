@@ -10,9 +10,9 @@ YZM301 · 1 haftalık ödev · Google Stitch → Google AI Studio → Cypress
 
 | | |
 |---|---|
-| 📱 Uygulama (AI Studio) | **[AI Studio linki buraya]** |
-| 🎬 Demo video (60 sn, Cypress koşusu) | **[video linki buraya]** · yerel kopya: [demo/se-primer-demo.mp4](demo/se-primer-demo.mp4) |
-| 📦 Repo | **[GitHub linki buraya]** |
+| 📱 Uygulama (AI Studio) | **https://ai.studio/apps/bf322592-890d-4264-8433-892593ab45b4?fullscreenApplet=true** |
+| 🎬 Demo video (60 sn, Cypress koşusu) | **https://github.com/abdulkadirelaldi/se-primer/blob/main/demo/se-primer-demo.mp4** |
+| 📦 Repo | **https://github.com/abdulkadirelaldi/se-primer** |
 
 ## Teslimler
 
@@ -22,7 +22,7 @@ YZM301 · 1 haftalık ödev · Google Stitch → Google AI Studio → Cypress
 | **Tasarım** (15) | Stitch ekranları (giriş, sahne, son) + tasarım sistemi | [DESIGN.md](DESIGN.md) · [design/stitch/](design/stitch/) · [design/stitch-prompts.md](design/stitch-prompts.md) · uygulama ekranları [design/app-screens/](design/app-screens/) |
 | **Çalışan uygulama** (20) | AI Studio linki; telefonda baştan sona oynanır | Yukarıdaki link · [design/ai-studio.md](design/ai-studio.md) |
 | **Tutor eval** (25) | 20 cevap, elle etiket, hata türleri, oran + örnek sayısı | [eval/EVAL.md](eval/EVAL.md) (yöntem) · [eval/REPORT.md](eval/REPORT.md) (sonuçlar) · [eval/labels-offline.csv](eval/labels-offline.csv) |
-| **Cypress demo** (10) | 8 yolun hepsi E2E, 23 test; 60 sn demo video | [cypress/e2e/](cypress/e2e/) · [demo/se-primer-demo.mp4](demo/se-primer-demo.mp4) |
+| **Cypress demo** (10) | 8 yolun hepsi E2E, 25 test; 60 sn demo video | [cypress/e2e/](cypress/e2e/) · [demo/se-primer-demo.mp4](demo/se-primer-demo.mp4) |
 | **Ürün kararı** (10) | Yapılmayan 3 özellik ve nedenleri | Aşağıda ↓ |
 
 ## Ürün kararı: yapmadığım 3 özellik
@@ -42,7 +42,7 @@ YZM301 · 1 haftalık ödev · Google Stitch → Google AI Studio → Cypress
 - **Rol** (Backend / QA / DevOps), brifingi ve her kararın sonundaki “X olarak:” dersini değiştirir.
 - **Hedef** (Mimari / Test / KVKK), ilgili kararda 🎯 rozeti ve “Hedefin için derinleş” notunu açar.
 - **Son**, KVKK kararıyla belirlenir: maskeleyen oyuncu **Son A · “08:25 sistem ayakta, veri güvende”**, ham logu paylaşan oyuncu **Son B · “… sistem ayakta ama KVKK ihlali”** ile karşılaşır. Bitiş saatini ilk iki karar belirler.
-- **AI tutor** Gemini (`gemini-flash-latest`) ile çalışır. Her yanıt, oyuncuya ulaşmadan önce sızıntı dedektöründen geçer. Anahtar yoksa ya da istek hata verirse kural tabanlı Sokratik tutor devreye girer, oyun hiçbir koşulda kırılmaz.
+- **AI tutor** sunucu tarafında Gemini ile çalışır (`server.ts` → `POST /api/tutor`; anahtar tarayıcıya hiç inmez). Her yanıt, oyuncuya ulaşmadan önce sunucuda sızıntı dedektöründen geçer; ham model yanıtı istemciye gönderilmez. Anahtar yoksa ya da Gemini hata verirse kural tabanlı Sokratik tutor devreye girer ve etiket bunu açıkça söyler (“çevrimdışı mod”). Oyun hiçbir koşulda kırılmaz.
 
 Ayrıntılı davranış, durum makinesi ve kabul örnekleri için [spec.md](spec.md).
 
@@ -53,14 +53,14 @@ Gereksinim: Node.js 20+
 ```bash
 npm install
 cp .env.local.example .env.local   # isteğe bağlı: GEMINI_API_KEY=... (yoksa tutor çevrimdışı modda çalışır)
-npm run dev                        # http://localhost:5173 · telefondan aynı ağdaki Network adresiyle açılabilir
+npm run dev                        # http://localhost:3000 (Express + Vite) · telefondan aynı ağdaki IP:3000 ile açılabilir
 ```
 
 | Komut | Ne yapar |
 |---|---|
-| `npm run test:e2e` | Sunucuyu başlatır, 3 spec / 23 testi koşar (8 yol, kişiselleştirme, tutor) |
+| `npm run test:e2e` | Sunucuyu başlatır, 3 spec / 25 testi koşar (8 yol, kişiselleştirme, tutor) |
 | `npm run demo:video` | Yavaş tempolu demo koşusunu kaydeder → `cypress/videos/demo.cy.ts.mp4` |
-| `npm run eval` | 20 öğrenci mesajını tutor'a verir → `eval/labels-<motor>.csv` |
+| `npm run eval` | 20 öğrenci mesajını tutor'a verir (`.env.local`'da anahtar varsa uygulamanın sunucu koduyla Gemini) → `eval/labels-<motor>.csv` |
 | `npm run eval:report` | Elle doldurulmuş etiketlerden `eval/REPORT.md` üretir |
 | `npm run typecheck` | Uygulama + Cypress tip kontrolü |
 | `npm run build` | Üretim derlemesi |
@@ -81,7 +81,7 @@ ffmpeg -i cypress/videos/demo.cy.ts.mp4 -filter:v "setpts=(59.5/SÜRE)*PTS,scale
 | KÖ-2 Deneyimli 60 sn süre baskısı, süre dolunca B | `personalization.cy.ts` | 1 |
 | KÖ-3 Rol ve hedef anlatıyı değiştirir | `personalization.cy.ts` | 4 |
 | KÖ-4 Her yol: ne oldu/neden oldu, 2 son | `paths.cy.ts` | 10 (8 yol + en iyi yol + tekrar oyna) |
-| KÖ-5 Tutor cevabı vermez | `tutor.cy.ts` | 6 |
+| KÖ-5 Tutor cevabı vermez (+ sunucu yolu ve 502 yedeği) | `tutor.cy.ts` | 8 |
 
 ## Proje yapısı
 
@@ -93,7 +93,9 @@ ffmpeg -i cypress/videos/demo.cy.ts.mp4 -filter:v "setpts=(59.5/SÜRE)*PTS,scale
 ├── game/
 │   ├── story.ts            # senaryo, kararlar, sonuçlar, ipuçları, kişiselleştirme metinleri
 │   └── machine.ts          # durum makinesi (saf fonksiyon) + sonuç hesabı
-├── services/tutor.ts       # Gemini tutor, çevrimdışı Sokratik tutor, sızıntı dedektörü
+├── server.ts               # Express: oyunu sunar + POST /api/tutor (doğrulama, Gemini, sızıntı koruması)
+├── services/tutor.ts       # paylaşılan: çevrimdışı Sokratik tutor, sızıntı dedektörü, sistem talimatı, istemci
+├── services/tutor.server.ts# sunucu: Gemini çağrısı (model yedekli), eval de bunu kullanır
 ├── components/             # Intro, Profile, Scene, Feedback, Tutor, Countdown, Ending
 ├── cypress/e2e/            # paths, personalization, tutor, demo, screens
 ├── eval/                   # students.json, run-eval.ts, report.ts, labels-*.csv, EVAL.md, REPORT.md

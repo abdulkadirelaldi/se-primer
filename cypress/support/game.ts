@@ -3,8 +3,8 @@ export type Role = 'backend' | 'qa' | 'devops';
 export type Goal = 'architecture' | 'testing' | 'security';
 
 /** Uygulamayı açar, girişteki 3 soruyu yanıtlar ve ilk karara gelir. */
-export function startGame(level: Level = 'intermediate', role: Role = 'backend', goal: Goal = 'architecture') {
-  cy.visit('/?tutor=offline');
+export function startGame(level: Level = 'intermediate', role: Role = 'backend', goal: Goal = 'architecture', url = '/?tutor=offline') {
+  cy.visit(url);
   cy.get('[data-cy=start-btn]').click();
   cy.get('[data-cy=profile-step]').should('have.text', '1 / 3');
   cy.get(`[data-cy=opt-level-${level}]`).click();

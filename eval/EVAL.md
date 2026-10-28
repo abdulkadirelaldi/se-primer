@@ -58,8 +58,9 @@ Karar ve mesaj türü bazında kırılım da raporlanır.
 ## 4. Nasıl çalıştırılır
 
 ```bash
-# 1) Yanıtları üret (GEMINI_API_KEY varsa Gemini, yoksa çevrimdışı tutor)
-GEMINI_API_KEY=... npm run eval
+# 1) Yanıtları üret: .env.local içinde GEMINI_API_KEY varsa Gemini, yoksa çevrimdışı tutor.
+#    Gemini yolu, uygulamanın /api/tutor uç noktasının çağırdığı fonksiyonun aynısıdır (services/tutor.server.ts).
+npm run eval
 # 2) eval/labels-gemini.csv dosyasını Excel/Numbers ile aç, insan_* sütunlarını ELLE doldur
 # 3) Raporu üret
 npm run eval:report

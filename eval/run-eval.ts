@@ -1,7 +1,7 @@
 /**
  * Tutor eval — 20 öğrenci cevabını tutor'a verir, yanıtları etiketlemeye hazır CSV'ye yazar.
  *
- *   npm run eval                     # GEMINI_API_KEY varsa Gemini, yoksa çevrimdışı tutor
+ *   npm run eval                     # .env.local'da GEMINI_API_KEY varsa Gemini (uygulamadaki sunucu koduyla aynı), yoksa çevrimdışı
  *   npm run eval -- --engine offline # motoru zorla
  *   npm run eval -- --force          # var olan etiket dosyasının üzerine yaz
  *
@@ -11,8 +11,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Decision, DecisionId, Profile } from '../types';
-import { DECISIONS } from '../game/story';
-import { askTutor, detectLeak, isSocratic, type Engine } from '../services/tutor';
+import { DECISIONS } from '../game/story.ts';
+import { askTutor, detectLeak, isSocratic, type Engine, type TutorRequest } from '../services/tutor.ts';
+import { geminiTutorReply } from '../services/tutor.server.ts';
 import { writeCsv } from './csv';
 
 const DIR = import.meta.dirname;
@@ -44,13 +45,16 @@ async function main() {
 
   const results = [];
   for (const s of students) {
-    const reply = await askTutor({ decision: byId(s.karar), profile: PROFILE, message: s.ogrenci, history: [] }, engine);
+    const req: TutorRequest = { decision: byId(s.karar), profile: PROFILE, message: s.ogrenci, history: [] };
+    // Gemini: uygulamanın /api/tutor uç noktasının çağırdığı fonksiyonun aynısı (ham yanıt dahil).
+    const reply = engine === 'gemini' ? await geminiTutorReply(req) : await askTutor(req, 'offline');
     const row = {
       id: s.id,
       karar: s.karar,
       tur: s.tur,
       ogrenci: s.ogrenci,
       motor: reply.engine,
+      model: 'model' in reply ? reply.model : 'offline',
       tutor_ham: reply.rawText,
       tutor_son: reply.text,
       oto_sizinti: reply.leak ?? '',

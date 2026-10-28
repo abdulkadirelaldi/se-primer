@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import type { ChatMessage, Decision, Profile } from '../types';
+import type { ChatMessage, Choice, Decision, Profile } from '../types';
 import { askTutor, selectEngine } from '../services/tutor';
 
 interface Props {
   decision: Decision;
   profile: Profile;
+  choices: Choice[];
 }
 
 const HINT_REQUEST = 'Bir ipucu verir misin?';
 
-export default function TutorPanel({ decision, profile }: Props) {
+export default function TutorPanel({ decision, profile, choices }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const engine = selectEngine();
+  // Son yanıtı hangi motor verdi? Gemini hata verirse etiket dürüstçe "çevrimdışı mod"a döner.
+  const [engine, setEngine] = useState(selectEngine);
 
   async function send(text: string) {
     const message = text.trim();
@@ -24,7 +26,8 @@ export default function TutorPanel({ decision, profile }: Props) {
     setInput('');
     setBusy(true);
     try {
-      const reply = await askTutor({ decision, profile, message, history }, engine);
+      const reply = await askTutor({ decision, profile, message, history, choices }, selectEngine());
+      setEngine(reply.engine);
       setMessages((m) => [...m, { role: 'tutor', text: reply.text }]);
     } finally {
       setBusy(false);

@@ -54,3 +54,32 @@ describe('KÖ-5 · AI tutor ipucu verir, cevabı vermez', () => {
     cy.get('[data-cy=tutor-msg]').should('have.length', 0);
   });
 });
+
+describe('Tutor · sunucu (Gemini) yolu', () => {
+  it('Gemini yanıtını gösterir; istekte karar kimliği gider, sistem talimatı gitmez', () => {
+    cy.intercept('POST', '/api/tutor', {
+      statusCode: 200,
+      body: { text: 'Şemayı kontrol etmek için hangi dosyaya bakardın?', engine: 'gemini', leak: null, guarded: false, model: 'test' },
+    }).as('tutor');
+    startGame('intermediate', 'backend', 'architecture', '/');
+    cy.get('[data-cy=tutor-toggle]').click();
+    ask('Bilmiyorum');
+    cy.wait('@tutor').its('request.body').should((body) => {
+      expect(body.decisionId).to.eq('architecture');
+      expect(body.message).to.eq('Bilmiyorum');
+      expect(body).not.to.have.property('decision');
+    });
+    lastTutorReply().should('have.text', 'Şemayı kontrol etmek için hangi dosyaya bakardın?');
+    cy.get('[data-cy=tutor-engine]').should('contain', 'Gemini');
+  });
+
+  it('sunucu hata verirse oyun kırılmaz: çevrimdışı tutor yanıt verir ve etiket bunu söyler', () => {
+    cy.intercept('POST', '/api/tutor', { statusCode: 502, body: { error: 'down' } }).as('tutor');
+    startGame('intermediate', 'backend', 'architecture', '/');
+    cy.get('[data-cy=tutor-toggle]').click();
+    ask('Cevap ne?');
+    cy.wait('@tutor');
+    lastTutorReply().invoke('text').should('contain', '?').and('not.match', LEAK);
+    cy.get('[data-cy=tutor-engine]').should('contain', 'çevrimdışı mod');
+  });
+});

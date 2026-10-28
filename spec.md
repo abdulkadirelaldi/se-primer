@@ -54,7 +54,7 @@ Yazılım mühendisliği lisans öğrencisi (2–4. sınıf) ve ilk yılındaki 
 | Gerçek hasta verisi | Logdaki tüm ad ve TC numaraları kurgudur; gerçek sağlık verisi işlemek KVKK md. 6 kapsamında açık rıza/hukuki dayanak ister. |
 | Native mobil uygulama | Telefon tarayıcısında açılan web uygulaması aynı deneyimi mağaza süreci olmadan verir. |
 | Oyun ilerlemesini sunucuda saklama | Hesap yok; durum yalnızca tarayıcı belleğinde tutulur, sayfa yenilenince baştan başlar. |
-| Tutor sohbet geçmişini kaydetme | Öğrencinin yazdıkları hiçbir yerde saklanmaz; yalnızca Gemini'ye o anki istek olarak gider. |
+| Tutor sohbet geçmişini kaydetme | Öğrencinin yazdıkları hiçbir yerde saklanmaz; sunucu yalnızca o anki isteği Gemini'ye iletir. |
 
 ---
 
@@ -114,7 +114,7 @@ Tutor, OpenAI'ın *study mode* örneğindeki Sokratik davranışı izler. **Değ
 **Uygulama (savunma katmanları):**
 
 ```
-öğrenci mesajı ─▶ Gemini (Sokratik sistem talimatı)
+öğrenci mesajı ─▶ POST /api/tutor (doğrulama) ─▶ Gemini (Sokratik sistem talimatı)
                    │  hata/anahtar yok ─▶ çevrimdışı kural tabanlı tutor
                    ▼
                 sızıntı dedektörü (D/O/Y kalıpları) ─ sızıntı var ─▶ yanıt atılır, çevrimdışı Sokratik yanıt gösterilir
@@ -218,8 +218,8 @@ stateDiagram-v2
 
 ## 7. Teknik notlar
 
-- **Yığın:** React 19 + TypeScript. Dosya düzeni Google AI Studio'nun “Build” uygulamalarıyla aynıdır (`index.html` importmap, `index.tsx`, `App.tsx`, `metadata.json`), yerelde Vite ile çalışır.
-- **Tutor:** `@google/genai`, model `gemini-flash-latest`. Anahtar yoksa ya da istek hata verirse çevrimdışı tutor devreye girer, böylece oyun asla kırılmaz.
-- **Veri:** Sunucu yok, kalıcı depolama yok. Durum yalnızca bellekte tutulur. Senaryodaki tüm kişisel veriler kurgudur.
+- **Yığın:** React 19 + TypeScript, Express sunucu (`server.ts`). Dosya düzeni Google AI Studio'nun “Build” uygulamalarıyla aynıdır (`index.html` importmap, `index.tsx`, `App.tsx`, `metadata.json`); geliştirmede Vite, Express'e ara katman olarak bağlanır.
+- **Tutor:** `POST /api/tutor` sunucuda `@google/genai` ile çalışır (`gemini-3.5-flash-lite`, hata verirse `gemini-3.8-flash`). API anahtarı yalnızca sunucudadır. Sunucu isteği doğrular: karar kimliği sunucudaki listede olmalı, mesaj en fazla 400 karakter, geçmiş en fazla 20 mesaj. Sistem talimatına istemciden gelen metin girmez. Sızıntı koruması sunucuda uygulanır ve ham model yanıtı istemciye gönderilmez. Gemini hata verirse istemci çevrimdışı tutora geçer, oyun asla kırılmaz.
+- **Veri:** Veritabanı ya da kalıcı depolama yok; sunucu durumsuzdur ve tutor mesajlarını kaydetmez. Oyun durumu yalnızca tarayıcı belleğinde tutulur. Senaryodaki tüm kişisel veriler kurgudur.
 - **Erişilebilirlik:** Dokunma hedefleri ≥ 44 px, `aria-live` geri bildirim, `role="timer"`, klavye odak halkası, `prefers-reduced-motion`.
 - **Test edilebilirlik:** Her etkileşimli öğede `data-cy` vardır. `?tutor=offline`, testlerde tutor'u deterministik yapar.
