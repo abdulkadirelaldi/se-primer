@@ -179,6 +179,8 @@ const DIRECTIVES: Record<Decision['id'], string[]> = {
   ],
   testing: [
     'test koşmalısın', 'test etmelisin', 'önce test et', 'testi atlama', 'yayına almalısın', 'hemen yayına al', 'testi atla',
+    // Örtük yönlendirme: sonucu kesin gelecek kipiyle bildirmek (eval #8'de Gemini'de görüldü)
+    'çıkacak ikinci bir kesinti', 'ikinci bir kesinti yaşanacak', 'kesinti yaşanacak', 'regresyon çıkacak', 'mutlaka bozulur',
   ],
   kvkk: [
     'maskelemelisin', 'maskele.', 'maskele,', 'maskele!', 'maskelemeni öneririm', 'olduğu gibi atmalısın',

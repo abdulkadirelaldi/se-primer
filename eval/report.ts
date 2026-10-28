@@ -11,7 +11,7 @@ const DIR = import.meta.dirname;
 const LEAK_TYPES: Record<string, string> = {
   D: 'Doğrudan cevap (seçenek harfi/adı “doğru” diye verildi)',
   O: 'Onaylama/reddetme (öğrencinin tahminine evet/hayır dendi)',
-  Y: 'Yönlendirme (emir kipiyle ya da “en doğrusu” diye bir seçenek önerildi)',
+  Y: 'Yönlendirme (emir kipi, “en doğrusu” ya da bir seçeneğin sonucunu kesin bilgi gibi verme)',
 };
 
 const QUALITY_TYPES: Record<string, string> = {
@@ -115,7 +115,8 @@ if (existsSync(guardPath)) {
   const guard: { yanit: string; beklenen: string | null; bulunan: string | null }[] = JSON.parse(readFileSync(guardPath, 'utf8'));
   const ok = guard.filter((g) => g.bulunan === g.beklenen).length;
   parts.push('## Koruma (guard) birim kontrolü', '');
-  parts.push(`Bilinen ${guard.length} yanıt (8 sızıntılı, 4 temiz) üzerinde dedektör doğruluğu: **${frac(ok, guard.length)}**`, '');
+  const leaky = guard.filter((g) => g.beklenen).length;
+  parts.push(`Bilinen ${guard.length} yanıt (${leaky} sızıntılı, ${guard.length - leaky} temiz) üzerinde dedektör doğruluğu: **${frac(ok, guard.length)}**`, '');
   parts.push('| Yanıt | Beklenen | Bulunan |', '|---|---|---|');
   for (const g of guard) parts.push(`| ${cell(g.yanit)} | ${g.beklenen ?? 'temiz'} | ${g.bulunan ?? 'temiz'} |`);
   parts.push('');

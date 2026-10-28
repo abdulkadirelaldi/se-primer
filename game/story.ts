@@ -172,7 +172,7 @@ export const DECISIONS: Decision[] = [
     },
     hints: [
       'Bu düzeltmenin yalnızca çözdüğü hatayı değil, başka bir şeyi bozmadığını nereden bileceksin?',
-      'Birkaç dakikalık bir testin maliyetiyle, yayında ortaya çıkacak ikinci bir kesintinin maliyetini nasıl karşılaştırırsın?',
+      'Birkaç dakikalık bir testin maliyetiyle, yayında ortaya çıkabilecek ikinci bir kesintinin maliyetini nasıl karşılaştırırsın?',
       'Kriz anında bile koşabileceğin en küçük test seti hangi akışları kapsamalı?',
     ],
     probes: {

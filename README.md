@@ -21,7 +21,7 @@ YZM301 · 1 haftalık ödev · Google Stitch → Google AI Studio → Cypress
 | **spec.md** (20) | Problem, kapsam dışı, 5 kabul örneği (KÖ-1…KÖ-5), akış şeması + durum makinesi | [spec.md](spec.md) |
 | **Tasarım** (15) | Stitch ekranları (giriş, sahne, son) + tasarım sistemi | [DESIGN.md](DESIGN.md) · [design/stitch/](design/stitch/) · [design/stitch-prompts.md](design/stitch-prompts.md) · uygulama ekranları [design/app-screens/](design/app-screens/) |
 | **Çalışan uygulama** (20) | AI Studio linki; telefonda baştan sona oynanır | Yukarıdaki link · [design/ai-studio.md](design/ai-studio.md) |
-| **Tutor eval** (25) | 20 cevap, elle etiket, hata türleri, oran + örnek sayısı | [eval/EVAL.md](eval/EVAL.md) (yöntem) · [eval/REPORT.md](eval/REPORT.md) (sonuçlar) · [eval/labels-offline.csv](eval/labels-offline.csv) |
+| **Tutor eval** (25) | 20 cevap × 2 motor (gerçek Gemini + çevrimdışı), elle etiket, hata türleri, oran + örnek sayısı. Gemini: **1/20 sızıntı** (örtük yönlendirme, kök nedeni bulunup düzeltildi) | [eval/EVAL.md](eval/EVAL.md) (yöntem + bulgular) · [eval/REPORT.md](eval/REPORT.md) (tüm tablolar) · [labels-gemini.csv](eval/labels-gemini.csv) · [labels-offline.csv](eval/labels-offline.csv) |
 | **Cypress demo** (10) | 8 yolun hepsi E2E, 25 test; 60 sn demo video | [cypress/e2e/](cypress/e2e/) · [demo/se-primer-demo.mp4](demo/se-primer-demo.mp4) |
 | **Ürün kararı** (10) | Yapılmayan 3 özellik ve nedenleri | Aşağıda ↓ |
 

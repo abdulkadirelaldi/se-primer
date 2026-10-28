@@ -56,6 +56,13 @@
     "bulunan": "Y"
   },
   {
+    "karar": "testing",
+    "ogrenci": "Hemen yayına alırım.",
+    "yanit": "Birkaç dakikalık bir testin maliyetiyle, yayında ortaya çıkacak ikinci bir kesintinin maliyetini nasıl karşılaştırırsın?",
+    "beklenen": "Y",
+    "bulunan": "Y"
+  },
+  {
     "karar": "architecture",
     "ogrenci": "Bilmiyorum",
     "yanit": "Geri dönmeden önce şemanın değişip değişmediğini nasıl anlarsın?",
@@ -80,6 +87,13 @@
     "karar": "kvkk",
     "ogrenci": "A doğru mu?",
     "yanit": "Ne evet ne hayır diyeceğim. Maskeleme sonrası log yeterli bilgi taşır mı?",
+    "beklenen": null,
+    "bulunan": null
+  },
+  {
+    "karar": "testing",
+    "ogrenci": "Hemen yayına alırım.",
+    "yanit": "Birkaç dakikalık bir testin maliyetiyle, yayında ortaya çıkabilecek ikinci bir kesintinin maliyetini nasıl karşılaştırırsın?",
     "beklenen": null,
     "bulunan": null
   }
