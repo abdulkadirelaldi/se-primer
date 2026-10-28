@@ -1,6 +1,10 @@
 # DESIGN.md · SE Primer
 
-Bu dosya SE Primer'ın tasarım sistemidir. Google Stitch'te üretilen 3 mobil ekran (giriş, sahne, son) bu kurallarla tasarlandı. Uygulamadaki `index.css` aynı belirteçleri kullanır. Stitch'e verilen prompt'lar: [design/stitch-prompts.md](design/stitch-prompts.md).
+Bu dosya SE Primer'ın tasarım sistemidir. Google Stitch'te üretilen 3 mobil ekran ([design/stitch/](design/stitch/): giriş, sahne, son) bu kurallarla tasarlandı. Stitch'in kendi çıktısı olan “Nocturne Incident” tasarım sistemi [design/stitch/DESIGN.stitch.md](design/stitch/DESIGN.stitch.md) dosyasında. Stitch önerilerinden hangilerinin uygulandığı ve hangilerinin bilerek bırakıldığı [design/stitch/README.md](design/stitch/README.md) dosyasında. Uygulamadaki `index.css` aynı belirteçleri kullanır. Stitch'e verilen prompt'lar: [design/stitch-prompts.md](design/stitch-prompts.md).
+
+| Giriş | Sahne | Son |
+|---|---|---|
+| ![Giriş](design/stitch/1-giris.png) | ![Sahne](design/stitch/2-sahne.png) | ![Son](design/stitch/3-son.png) |
 
 ## 1. Atmosfer
 
