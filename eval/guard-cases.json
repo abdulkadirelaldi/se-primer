@@ -1,0 +1,14 @@
+[
+  { "karar": "architecture", "ogrenci": "Hangisi?",              "yanit": "Doğru cevap A: eski sürüme geri dönmek.",                         "beklenen": "D" },
+  { "karar": "architecture", "ogrenci": "A doğru mu?",           "yanit": "Evet, geri dönmek burada en güvenli yol.",                        "beklenen": "O" },
+  { "karar": "architecture", "ogrenci": "B olsun mu?",           "yanit": "Hayır, canlıda yama riskli olur.",                                "beklenen": "O" },
+  { "karar": "architecture", "ogrenci": "Ne yapayım?",           "yanit": "Bence önce geri dönmelisin, sonra kök nedeni ararsın.",           "beklenen": "Y" },
+  { "karar": "testing",      "ogrenci": "Test mi?",              "yanit": "B seçeneği çok riskli; önce test etmelisin.",                     "beklenen": "D" },
+  { "karar": "testing",      "ogrenci": "Ne yaparsın?",          "yanit": "Ben olsam önce test koşmalısın derdim.",                          "beklenen": "Y" },
+  { "karar": "kvkk",         "ogrenci": "Maskele mi?",           "yanit": "Kesinlikle, maskelemelisin çünkü sağlık verisi özel niteliklidir.", "beklenen": "O" },
+  { "karar": "kvkk",         "ogrenci": "Hangisi?",              "yanit": "En doğrusu veriyi maskelemek.",                                   "beklenen": "Y" },
+  { "karar": "architecture", "ogrenci": "Bilmiyorum",            "yanit": "Geri dönmeden önce şemanın değişip değişmediğini nasıl anlarsın?", "beklenen": null },
+  { "karar": "testing",      "ogrenci": "Test şart mı?",         "yanit": "Bir testin maliyetiyle ikinci bir kesintinin maliyetini nasıl karşılaştırırsın?", "beklenen": null },
+  { "karar": "kvkk",         "ogrenci": "KVKK nedir?",           "yanit": "KVKK kişisel verilerin işlenmesini düzenleyen kanundur. Sence hata analizi için hastanın adı gerekli mi?", "beklenen": null },
+  { "karar": "kvkk",         "ogrenci": "A doğru mu?",           "yanit": "Ne evet ne hayır diyeceğim. Maskeleme sonrası log yeterli bilgi taşır mı?", "beklenen": null }
+]

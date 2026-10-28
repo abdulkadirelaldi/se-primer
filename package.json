@@ -1,0 +1,33 @@
+{
+  "name": "se-primer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p cypress",
+    "cy:open": "cypress open",
+    "test:e2e": "start-server-and-test dev http://localhost:5173 \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts\"",
+    "demo:video": "start-server-and-test dev http://localhost:5173 \"cypress run --spec cypress/e2e/demo.cy.ts --config video=true\"",
+    "eval": "tsx eval/run-eval.ts",
+    "eval:report": "tsx eval/report.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "cypress": "^16.2.0",
+    "start-server-and-test": "^3.0.13",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
