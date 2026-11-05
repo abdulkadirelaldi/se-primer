@@ -1,0 +1,9 @@
+# SE Primer v2 — model boru hattı (Python 3.12)
+#   uv venv --python 3.12 .venv && uv pip install --python .venv -r requirements.txt
+scikit-learn==1.9.1
+skl2onnx==1.20.0
+onnx
+onnxruntime
+numpy
+pandas
+huggingface_hub>=2.3

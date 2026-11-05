@@ -5,3 +5,7 @@ dist
 cypress/videos
 cypress/screenshots
 .DS_Store
+.venv
+__pycache__
+_out
+*.joblib

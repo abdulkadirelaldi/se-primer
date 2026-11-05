@@ -223,3 +223,94 @@ stateDiagram-v2
 - **Veri:** Veritabanı ya da kalıcı depolama yok; sunucu durumsuzdur ve tutor mesajlarını kaydetmez. Oyun durumu yalnızca tarayıcı belleğinde tutulur. Senaryodaki tüm kişisel veriler kurgudur.
 - **Erişilebilirlik:** Dokunma hedefleri ≥ 44 px, `aria-live` geri bildirim, `role="timer"`, klavye odak halkası, `prefers-reduced-motion`.
 - **Test edilebilirlik:** Her etkileşimli öğede `data-cy` vardır. `?tutor=offline`, testlerde tutor'u deterministik yapar.
+
+---
+
+# v2 · Davranıştan öğrenen uyum: “Kötü sona gitme riski” modeli
+
+> Bu bölüm **modelden önce** yazıldı ve ayrı bir commit olarak kaydedildi. Eşikler, eğitimden sonra değiştirilmez. Değişirse yeni bir sürüm ve gerekçesi `RELEASE.md`'ye yazılır.
+
+## 8. Problem (v2)
+
+v1'deki uyum sabit kurallara dayanıyordu: girişte “Yeni başladım” diyen herkes ipucu görüyor, “Deneyimliyim” diyen herkes süre baskısı yaşıyordu. Ama oyuncunun kendisi hakkında söyledikleri, nasıl davrandığını tam yansıtmıyor. Kendini deneyimli sayan biri “Ne oldu / Neden oldu” ekranını iki saniyede geçip ikinci kararda da aceleyle riskli seçeneği seçebiliyor. Kendini yeni başlayan sayan biri ise her geri bildirimi dikkatle okuyor olabiliyor.
+
+Bir yazılım mühendisi adayı için en pahalı hata, baskı altında **“hızlı ama riskli”** yolu refleks hâline getirmek: test etmeden yayına almak, ham logu paylaşmak. v2, bu eğilimi **oyuncunun davranışından** tahmin eden küçük, göreve özel bir model ekler. Model riski yüksek gördüğünde, oyuncu karar vermeden önce onu bir kez durdurur.
+
+## 9. Model gereksinimi
+
+| | |
+|---|---|
+| **Soru** | Bu oyuncu, bu sahnede riskli seçeneği (B) seçecek mi? |
+| **Ne zaman** | Her karar sahnesi açılırken. Yalnızca o ana kadar bilinen davranış kullanılır; bu sahnedeki karar süresi kullanılmaz (sızıntı olurdu). |
+| **Hedef (`riskli_secim`)** | 1 = oyuncu B'yi seçti ya da süre doldu ve B uygulandı · 0 = A seçildi |
+| **Model türü** | Tabular veri, `StandardScaler` + `LogisticRegression` (sklearn) → `model.onnx` |
+| **Çıktı** | `p` = P(riskli_secim = 1), 0–1 arası olasılık |
+
+**Özellikler (sıra sabittir, sözleşme `model/config.json`'dadır):**
+
+| # | Özellik | Neden |
+|---|---|---|
+| 1 | `sahne_no` | 1–3. Kararların doğası ve oyunun ilerleyişi farklı. |
+| 2 | `seviye` | 0 = yeni, 1 = orta, 2 = deneyimli. Oyuncunun kendi beyanı. |
+| 3 | `onceki_oyun_sayisi` | Bu cihazda daha önce tamamlanan oyun sayısı. Öğrenme etkisini yakalar. |
+| 4 | `onceki_riskli_sayisi` | Bu oturumda o ana kadar yapılan riskli seçim sayısı. |
+| 5 | `onceki_karar_suresi_sn` | Bir önceki sahnede karar için harcanan süre. Acele ya da tereddüt sinyali. Sahne 1'de 0. |
+| 6 | `onceki_okuma_suresi_sn` | Bir önceki “Ne oldu / Neden oldu” ekranında geçen süre. Sahne 1'de 0. |
+| 7 | `tutor_mesaj_sayisi` | O ana kadar tutor'a gönderilen mesaj ve ipucu isteği sayısı. |
+
+**Oyun davranışı nasıl değişir** (`karar_esigi` = 0,5, `config.json`'da):
+
+| Model kararı | Oyunda |
+|---|---|
+| `p ≥ 0,5` (yüksek risk) | Seçeneklerden **önce** “🧭 Dur ve düşün” kartı açılır. Kart o kararın Sokratik sorusunu sorar. Seçenekler kart okunduktan sonra da görünür, oyuncu engellenmez. Kartta “Uyum modeli: risk %xx” etiketi şeffaflık için gösterilir. |
+| `p < 0,5` | v1 davranışı. Ek bir şey gösterilmez. |
+| Model yüklenemedi (ağ yok, dosya bozuk) | v1 davranışı. Oyun asla bloklanmaz, hata sessizce kaydedilir. |
+
+Değişiklik bilerek **eklemeli** tutuldu: v1'in hiçbir öğesi (ipucu kartı, sayaç, tutor) kaldırılmaz ya da değiştirilmez. Böylece v1 E2E testleri regresyon testi olarak değişmeden çalışır.
+
+## 10. Eval metriği ve kabul eşiği (altın standart)
+
+**Değerlendirme kümesi:** Katılımcı bazında gruplanmış ayırma (`GroupShuffleSplit`, `test_size = 0,25`, `random_state = 42`). Aynı kişinin oturumları hem eğitimde hem testte bulunamaz; aksi hâlde model kişiyi ezberler ve metrik şişer.
+
+**Kabul eşiği.** Model ancak şu koşulların **hepsini** sağlarsa yayınlanır:
+
+| # | Ölçüt | Eşik | Gerekçe |
+|---|---|---|---|
+| E1 | ROC-AUC (test) | **≥ 0,75** | Karar eşiğinden bağımsız sıralama gücü. 0,5 rastgele demek. |
+| E2 | Dengeli doğruluk (test, eşik 0,5) | **≥ 0,70** | Sınıflar dengesiz olabilir. Çoğunluk sınıfını tahmin eden model 0,50 alır. |
+| E3 | ONNX ↔ sklearn maks. mutlak fark | **≤ 1e-4** | Yayınlanan artefakt, ölçülen modelin aynısı olmalı. |
+| E4 | Gerçek oturum sayısı | **≥ 15** | Ödev koşulu. Yalnız sentetik veriyle eğitilen model yalnızca `taslak` olarak etiketlenir ve yayınlanmaz. |
+
+`train.py` bu koşullardan biri bile sağlanmazsa **sıfırdan farklı çıkış koduyla durur** ve `model/` klasörüne hiçbir şey yazmaz. Önceki artefakt olduğu gibi kalır.
+
+**Ayrıca raporlanır (eşik yok):** Gerçek (`kaynak = gercek`) test satırlarındaki metrikler ayrı tablo olarak raporlanır. Bu sayı küçük olduğu için (15–20 oturum × 3 karar) eşik konmadı; güven aralığı geniş. Model kartında açıkça yazılır.
+
+**Neden bu eşikler?** Model yanlış pozitif verdiğinde zararı küçük: oyuncu fazladan bir Sokratik kart görür. Yanlış negatifte ise v1 davranışına düşülür. Bu yüzden yüksek kesinlik değil, rastgeleden açıkça iyi bir sıralama (AUC 0,75) yeterli kabul edildi.
+
+## 11. Veri gizliliği (KVKK)
+
+- Veri yalnızca **Veri Toplama Modu**'nda (`?veri=1`) ve yalnızca oynanan cihazda (`localStorage`) toplanır. Normal oyunda hiçbir davranış verisi saklanmaz, hiçbir yere gönderilmez.
+- Ad, e-posta, cihaz kimliği, IP, konum ve tarih-saat **toplanmaz**. Oturum ve katılımcı kimlikleri rastgele üretilir (`K-7F3A` gibi) ve bir kişiyle eşleştirilemez.
+- Tutor'a yazılan metinlerin içeriği değil, yalnızca **sayısı** kaydedilir.
+- Model tarayıcıda çalışır. Oyuncunun davranış verisi cihazdan çıkmaz (bkz. `RELEASE.md` › ödünleşim matrisi).
+
+## 12. Kabul örnekleri (v2)
+
+### KÖ-6 · Eval kapısı: eşiği geçmeyen model yayınlanmaz
+- **Verilen:** `data/oturumlar.csv`.
+- **Olduğunda:** `python train.py` çalışır ve E1–E4'ten biri sağlanmaz (test için eşik `--esik-auc 0.99` ile yapay olarak yükseltilir).
+- **O zaman:** Betik hangi ölçütün tutmadığını yazar ve çıkış kodu 1 ile durur. `model/model.onnx` ve `model/config.json` değişmez.
+- **Ve:** Aynı veriyle iki kez çalıştırıldığında `config.json` içindeki metrikler birebir aynıdır (sabit tohum).
+
+### KÖ-7 · Model aynı sahnede iki oyuncu için farklı karar verir ve oyunu değiştirir
+- **Verilen:** İki oyuncu Karar 2'ye geliyor.
+  - **Oyuncu 1:** ilk oyunu, “Yeni başladım”, Karar 1'de 4 sn'de B'yi seçti, geri bildirimi 2 sn'de geçti, tutor'u kullanmadı.
+  - **Oyuncu 2:** 4. oyunu, “Deneyimliyim”, Karar 1'de 25 sn düşünüp A'yı seçti, geri bildirimi 20 sn okudu, tutor'a 2 mesaj yazdı.
+- **O zaman:** Oyuncu 1 için `p ≥ 0,5` olur ve “🧭 Dur ve düşün” kartı görünür. Oyuncu 2 için `p < 0,5` olur ve kart görünmez.
+- **Ve:** Model dosyası yüklenemezse kart hiç görünmez ve oyun v1 gibi sonuna kadar oynanır.
+
+### KÖ-8 · Diferansiyel test: iki ortam aynı olasılığı verir
+- **Verilen:** `tests/parite.json` içindeki 5 referans girdi ve Python ONNX Runtime'ın (test kahini) verdiği olasılıklar.
+- **Olduğunda:** Aynı `model.onnx` tarayıcıda `onnxruntime-web` ile çalıştırılır (`?lab=1` sayfası, `data-cy="p"`).
+- **O zaman:** Her girdi için |p_tarayıcı − p_python| **< 1e-4**.
+- **Ve:** v1'in 25 E2E testi model devredeyken değişmeden geçer (regresyon).
