@@ -33,5 +33,6 @@ jobs:
         with:
           install: false
           start: npm run dev
-          wait-on: http://localhost:3000/api/health
+          wait-on: http://127.0.0.1:3000/api/health
+          wait-on-timeout: 120
           spec: cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts,cypress/e2e/model.cy.ts,cypress/e2e/sunucu.cy.ts
