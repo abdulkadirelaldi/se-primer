@@ -29,6 +29,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - name: Sunucu duman testi
+        run: |
+          (npm run dev > sunucu.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3000/api/health && break; sleep 1; done
+          curl -sf http://127.0.0.1:3000/api/health || (cat sunucu.log; exit 1)
+          pkill -f "server.ts" || true
       - uses: cypress-io/github-action@v6
         with:
           install: false

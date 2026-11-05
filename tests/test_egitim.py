@@ -49,7 +49,10 @@ def main() -> int:
 
             depodaki = json.loads((KOK / "model" / "config.json").read_text(encoding="utf-8"))
             yeni = json.loads((t / "a" / "config.json").read_text(encoding="utf-8"))
-            if depodaki["metrics"] != yeni["metrics"] or depodaki["data"]["sha256"] != yeni["data"]["sha256"]:
+            # ONNX↔sklearn farkı (≈1e-8) CPU'nun kayan nokta yoluna göre makineden makineye değişir; kapı ≤ 1e-4 olduğunu ayrıca denetler.
+            # Model metrikleri ve veri özeti ise her ortamda birebir aynı olmalı.
+            ayni_metrik = all(depodaki["metrics"][k] == yeni["metrics"][k] for k in ("test", "gercek_test", "kapi_gecti"))
+            if not ayni_metrik or depodaki["data"]["sha256"] != yeni["data"]["sha256"] or depodaki["katsayilar"] != yeni["katsayilar"]:
                 hatalar.append("model/config.json depodaki veriden yeniden üretilemiyor (önce train.py çalıştırın)")
             else:
                 print(f"✓ model/ depodaki veriden yeniden üretilebiliyor (ROC-AUC {yeni['metrics']['test']['roc_auc']})")
