@@ -1,6 +1,8 @@
 /**
- * SE Primer sunucusu: oyunu sunar ve tek bir API uç noktası açar (POST /api/tutor).
- * Gemini çağrısı burada yapılır; anahtar tarayıcıya inmez. Geliştirmede Vite ara katman olarak çalışır.
+ * SE Primer sunucusu: oyunu sunar ve iki API uç noktası açar.
+ *  - POST /api/tutor : Gemini tutor (anahtar tarayıcıya inmez)
+ *  - POST /api/risk  : risk modeli, sunucu tarafı tüketici (onnxruntime-node; tarayıcıdakiyle aynı model.onnx)
+ * Geliştirmede Vite ara katman olarak çalışır.
  */
 import express from 'express';
 import path from 'path';
@@ -8,6 +10,7 @@ import type { ChatMessage, Choice, Level, Role, Goal } from './types.ts';
 import { DECISIONS } from './game/story.ts';
 import { LIMITS, type TutorApiResponse } from './services/tutor.ts';
 import { apiKey, geminiTutorReply } from './services/tutor.server.ts';
+import { GirdiHatasi, MODEL_BASE, riskTahmin } from './services/riskModel.server.ts';
 
 const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -22,6 +25,17 @@ app.use(express.json({ limit: '32kb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', tutor: apiKey ? 'gemini' : 'offline' });
+});
+
+// Gövde: {"inputs": {"sahne_no": 2, ...}} → {"p": 0.82, "karar": "dur_dusun", "version": "2.0.0"}
+app.post('/api/risk', async (req, res) => {
+  try {
+    return res.json(await riskTahmin(req.body?.inputs));
+  } catch (err) {
+    if (err instanceof GirdiHatasi) return res.status(400).json({ error: err.message });
+    console.warn('[server] risk modeli hatası:', (err as Error)?.message ?? err);
+    return res.status(503).json({ error: 'Model şu an kullanılamıyor' });
+  }
 });
 
 app.post('/api/tutor', async (req, res) => {
@@ -68,7 +82,7 @@ async function start() {
     app.use(vite.middlewares);
   }
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SE Primer: http://localhost:${PORT} · tutor: ${apiKey ? 'Gemini' : 'çevrimdışı (GEMINI_API_KEY yok)'}`);
+    console.log(`SE Primer: http://localhost:${PORT} · tutor: ${apiKey ? 'Gemini' : 'çevrimdışı (GEMINI_API_KEY yok)'} · risk modeli: ${MODEL_BASE}`);
   });
 }
 

@@ -165,6 +165,7 @@ def main() -> int:
     ap.add_argument("--taslak", action="store_true", help="gerçek oturum eşiğini (E4) atla; çıktı 'taslak' olarak işaretlenir")
     ap.add_argument("--esik-auc", type=float, default=ESIK_AUC)
     ap.add_argument("--esik-bacc", type=float, default=ESIK_BACC)
+    ap.add_argument("--cikti", type=Path, default=MODEL_DIR, help="artefakt klasörü (testler geçici klasör verir)")
     args = ap.parse_args()
 
     import onnxruntime
@@ -261,11 +262,11 @@ def main() -> int:
         (gecici_dizin / "README.md").write_text(model_karti(config), encoding="utf-8")
 
         # Hepsi hazırsa model/ klasörünü tek seferde değiştir (yarım artefakt kalmasın).
-        MODEL_DIR.mkdir(exist_ok=True)
+        args.cikti.mkdir(parents=True, exist_ok=True)
         for ad in ("model.onnx", "config.json", "README.md"):
-            shutil.copyfile(gecici_dizin / ad, MODEL_DIR / ad)
+            shutil.copyfile(gecici_dizin / ad, args.cikti / ad)
 
-    print(f"\n✓ eşikler geçildi → model/ (model.onnx, config.json, README.md) · ONNX↔sklearn fark {fark:.1e} · "
+    print(f"\n✓ eşikler geçildi → {args.cikti.name}/ (model.onnx, config.json, README.md) · ONNX↔sklearn fark {fark:.1e} · "
           f"{config['surum_turu']}")
     return 0
 

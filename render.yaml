@@ -1,0 +1,19 @@
+# Bonus · Kendi sunucunuzda tüketici (Render.com ücretsiz katman). Render panelinde "New → Blueprint" ile bu dosyayı seçin.
+services:
+  - type: web
+    name: se-primer
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: CYPRESS_INSTALL_BINARY
+        value: "0"
+      # Commit'e sabitli model (RELEASE.md). Boş bırakılırsa depodaki model/ kullanılır.
+      - key: MODEL_BASE
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

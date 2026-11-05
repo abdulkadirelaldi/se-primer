@@ -5,20 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --env-file-if-exists=.env.local server.ts",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && mkdir -p dist/model && cp model/model.onnx model/config.json dist/model/",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p cypress",
     "cy:open": "cypress open",
-    "test:e2e": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts,cypress/e2e/model.cy.ts\"",
+    "test:e2e": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts,cypress/e2e/model.cy.ts,cypress/e2e/sunucu.cy.ts\"",
     "demo:video": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/demo.cy.ts --config video=true\"",
     "eval": "tsx --env-file-if-exists=.env.local eval/run-eval.ts",
     "eval:report": "tsx eval/report.ts",
     "start": "NODE_ENV=production node --env-file-if-exists=.env.local server.ts",
-    "build:pages": "tsc --noEmit && vite build --base=/se-primer/ && mkdir -p dist/model && cp model/model.onnx model/config.json dist/model/"
+    "build:pages": "tsc --noEmit && vite build --base=/se-primer/ && mkdir -p dist/model && cp model/model.onnx model/config.json dist/model/",
+    "test:model": ".venv/bin/python tests/test_egitim.py && .venv/bin/python tests/parite.py"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
     "express": "^5.3.0",
+    "onnxruntime-node": "^1.31.1",
     "onnxruntime-web": "^1.31.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

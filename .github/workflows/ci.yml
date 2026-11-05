@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  model:
+    name: Model · eval kapısı, tekrarlanabilirlik, parite (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv venv --python 3.12 .venv && uv pip install --python .venv -r requirements.txt
+      - name: KÖ-6 · eval kapısı + başka ortamda aynı metrik
+        run: .venv/bin/python tests/test_egitim.py
+      - name: Test kahini · parite.json ↔ model.onnx
+        run: .venv/bin/python tests/parite.py
+
+  e2e:
+    name: E2E · regresyon + model + sunucu (Cypress)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - uses: cypress-io/github-action@v6
+        with:
+          install: false
+          start: npm run dev
+          wait-on: http://localhost:3000/api/health
+          spec: cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts,cypress/e2e/model.cy.ts,cypress/e2e/sunucu.cy.ts

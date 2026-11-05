@@ -1,0 +1,63 @@
+"""KÖ-6 · Eval kapısı ve tekrarlanabilir eğitim.   .venv/bin/python tests/test_egitim.py
+
+1. Eşik yapay olarak yükseltildiğinde train.py çıkış kodu 1 ile durur ve çıktı klasörüne hiçbir şey yazmaz.
+2. Aynı veriyle iki ayrı koşu byte düzeyinde aynı config.json ve model.onnx üretir (sabit tohum).
+3. Depodaki model/ artefaktı, depodaki veriden yeniden üretilebilir (aynı metrikler).
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+KOK = Path(__file__).resolve().parent.parent
+
+
+def egit(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run([sys.executable, str(KOK / "train.py"), "--taslak", *args], capture_output=True, text=True)
+
+
+def ozet(yol: Path) -> str:
+    return hashlib.sha256(yol.read_bytes()).hexdigest()
+
+
+def main() -> int:
+    hatalar = []
+    with tempfile.TemporaryDirectory() as t:
+        t = Path(t)
+
+        r = egit("--esik-auc", "0.99", "--cikti", str(t / "red"))
+        if r.returncode != 1 or "EVAL KAPISI" not in r.stdout:
+            hatalar.append(f"eşik altı model durmadı (çıkış {r.returncode})")
+        if (t / "red").exists() and any((t / "red").iterdir()):
+            hatalar.append("eşik altı koşu çıktı klasörüne dosya yazdı")
+        else:
+            print("✓ eşik altı: çıkış kodu 1, artefakt yazılmadı")
+
+        a, b = egit("--cikti", str(t / "a")), egit("--cikti", str(t / "b"))
+        if a.returncode or b.returncode:
+            hatalar.append(f"normal eğitim başarısız: {a.stdout[-300:]}")
+        else:
+            ayni = all(ozet(t / "a" / f) == ozet(t / "b" / f) for f in ("config.json", "model.onnx"))
+            if not ayni:
+                hatalar.append("iki koşu farklı artefakt üretti")
+            else:
+                print("✓ tekrarlanabilir: iki koşuda config.json ve model.onnx byte düzeyinde aynı")
+
+            depodaki = json.loads((KOK / "model" / "config.json").read_text(encoding="utf-8"))
+            yeni = json.loads((t / "a" / "config.json").read_text(encoding="utf-8"))
+            if depodaki["metrics"] != yeni["metrics"] or depodaki["data"]["sha256"] != yeni["data"]["sha256"]:
+                hatalar.append("model/config.json depodaki veriden yeniden üretilemiyor (önce train.py çalıştırın)")
+            else:
+                print(f"✓ model/ depodaki veriden yeniden üretilebiliyor (ROC-AUC {yeni['metrics']['test']['roc_auc']})")
+
+    for h in hatalar:
+        print(f"✗ {h}")
+    return 1 if hatalar else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
