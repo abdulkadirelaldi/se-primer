@@ -6,6 +6,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': path.resolve(import.meta.dirname, '.') } },
+  // onnxruntime-web wasm'ı import.meta.url ile bulur; ön paketleme bu yolu bozar.
+  optimizeDeps: { exclude: ['onnxruntime-web'] },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
     watch: process.env.DISABLE_HMR === 'true' ? null : {},

@@ -1,0 +1,64 @@
+{
+  "aciklama": "Test kahini: Python onnxruntime. Diğer tüketiciler |p - p_beklenen| < tolerans sağlamalı.",
+  "tolerans": 0.0001,
+  "model_surumu": "2.0.0",
+  "model_sha256": "f28eb1bd047788abc4ff8a739004cdb13250061de6627fcbd4404c5edba7e308",
+  "karar_esigi": 0.5,
+  "girdiler": [
+    {
+      "ad": "aceleci yeni başlayan, Karar 2",
+      "sahne_no": 2,
+      "seviye": 0,
+      "onceki_oyun_sayisi": 0,
+      "onceki_riskli_sayisi": 1,
+      "onceki_karar_suresi_sn": 4,
+      "onceki_okuma_suresi_sn": 2,
+      "tutor_mesaj_sayisi": 0,
+      "p_beklenen": 0.82564151
+    },
+    {
+      "ad": "dikkatli deneyimli, 4. oyun, Karar 2",
+      "sahne_no": 2,
+      "seviye": 2,
+      "onceki_oyun_sayisi": 3,
+      "onceki_riskli_sayisi": 0,
+      "onceki_karar_suresi_sn": 25,
+      "onceki_okuma_suresi_sn": 20,
+      "tutor_mesaj_sayisi": 2,
+      "p_beklenen": 0.1584776
+    },
+    {
+      "ad": "iki riskli seçim sonrası, Karar 3",
+      "sahne_no": 3,
+      "seviye": 1,
+      "onceki_oyun_sayisi": 0,
+      "onceki_riskli_sayisi": 2,
+      "onceki_karar_suresi_sn": 3.5,
+      "onceki_okuma_suresi_sn": 1.2,
+      "tutor_mesaj_sayisi": 0,
+      "p_beklenen": 0.86578107
+    },
+    {
+      "ad": "ortalama oyuncu, Karar 3",
+      "sahne_no": 3,
+      "seviye": 1,
+      "onceki_oyun_sayisi": 1,
+      "onceki_riskli_sayisi": 1,
+      "onceki_karar_suresi_sn": 12.4,
+      "onceki_okuma_suresi_sn": 9.7,
+      "tutor_mesaj_sayisi": 1,
+      "p_beklenen": 0.48414326
+    },
+    {
+      "ad": "uç değerler: çok uzun okuma, çok tutor",
+      "sahne_no": 2,
+      "seviye": 0,
+      "onceki_oyun_sayisi": 10,
+      "onceki_riskli_sayisi": 0,
+      "onceki_karar_suresi_sn": 59.9,
+      "onceki_okuma_suresi_sn": 120,
+      "tutor_mesaj_sayisi": 8,
+      "p_beklenen": 4.897e-05
+    }
+  ]
+}

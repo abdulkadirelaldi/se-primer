@@ -6,10 +6,12 @@ interface Props {
   profile: Profile;
   choices: Choice[];
   timedOut: boolean[];
+  /** Veri Toplama Modu'nda oturum kaydedildiyse. */
+  kayit?: { katilimci: string; oturumNo: number } | null;
   onRestart: () => void;
 }
 
-export default function EndingScreen({ profile, choices, timedOut, onRestart }: Props) {
+export default function EndingScreen({ profile, choices, timedOut, kayit, onRestart }: Props) {
   const result = computeResult(choices, timedOut);
   const ending = ENDINGS[result.ending];
   const goalIndex = decisionFor(profile.goal);
@@ -67,6 +69,12 @@ export default function EndingScreen({ profile, choices, timedOut, onRestart }: 
         <p className="eyebrow eyebrow--light">AI tutor son soruyu soruyor</p>
         <p>“{ending.reflection}”</p>
       </section>
+
+      {kayit && (
+        <p className="badge badge--goal" data-cy="veri-kaydedildi">
+          ✓ Oturum kaydedildi · {kayit.katilimci} · {kayit.oturumNo}. oturum
+        </p>
+      )}
 
       <button className="btn btn--primary btn--block" data-cy="restart-btn" onClick={onRestart}>
         Tekrar oyna

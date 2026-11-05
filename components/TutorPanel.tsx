@@ -6,11 +6,13 @@ interface Props {
   decision: Decision;
   profile: Profile;
   choices: Choice[];
+  /** Davranış ölçümü için: yalnızca mesaj sayısı bildirilir, içerik değil. */
+  onSend?: () => void;
 }
 
 const HINT_REQUEST = 'Bir ipucu verir misin?';
 
-export default function TutorPanel({ decision, profile, choices }: Props) {
+export default function TutorPanel({ decision, profile, choices, onSend }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -22,6 +24,7 @@ export default function TutorPanel({ decision, profile, choices }: Props) {
     const message = text.trim();
     if (!message || busy) return;
     const history = messages;
+    onSend?.();
     setMessages([...history, { role: 'student', text: message }]);
     setInput('');
     setBusy(true);

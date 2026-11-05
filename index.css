@@ -322,6 +322,61 @@ p {
   background: #fff7e8;
   border-color: #efcf97;
 }
+.card--risk {
+  background: #eef3fb;
+  border-color: var(--good-line);
+}
+.card--risk .eyebrow {
+  color: var(--good-ink);
+}
+.risk-badge {
+  font-size: 13px;
+  color: var(--muted);
+}
+.veri {
+  background: var(--navy-2);
+  border: 1px dashed var(--orange);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: #e6e9f2;
+}
+.veri__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.veri .btn {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.btn--light {
+  background: #fff;
+  color: var(--navy);
+}
+.lab {
+  gap: 12px;
+}
+.lab__field {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+.lab__field input {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 16px;
+}
+.lab__p {
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  font-weight: 700;
+}
 .card--goal {
   background: #fdf1e7;
   border-color: var(--orange);

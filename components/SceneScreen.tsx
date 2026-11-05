@@ -5,6 +5,7 @@ import { clockAfter } from '../game/machine';
 import Countdown from './Countdown';
 import FeedbackCard from './FeedbackCard';
 import TutorPanel from './TutorPanel';
+import type { RiskState } from '../App';
 
 interface Props {
   step: number;
@@ -12,11 +13,16 @@ interface Props {
   choices: Choice[];
   timedOut: boolean[];
   showFeedback: boolean;
+  /** Model riski yüksek bulduysa dolu (v2). */
+  risk?: RiskState | null;
+  /** Modelin ham olasılığı (eşik altında da); test ve şeffaflık için DOM'a yazılır. */
+  riskP?: number;
   onChoose: (choice: Choice, timedOut?: boolean) => void;
   onNext: () => void;
+  onTutorMessage?: () => void;
 }
 
-export default function SceneScreen({ step, profile, choices, timedOut, showFeedback, onChoose, onNext }: Props) {
+export default function SceneScreen({ step, profile, choices, timedOut, showFeedback, risk, riskP, onChoose, onNext, onTutorMessage }: Props) {
   const decision = DECISIONS[step];
   const isGoalDecision = decisionFor(profile.goal) === step;
   const previous = choices.slice(0, step);
@@ -27,7 +33,7 @@ export default function SceneScreen({ step, profile, choices, timedOut, showFeed
   }, [showFeedback]);
 
   return (
-    <main className="screen scene" data-cy="screen-scene">
+    <main className="screen scene" data-cy="screen-scene" data-risk-p={riskP?.toFixed(6)}>
       <header className="scene__header">
         <div>
           <p className="eyebrow eyebrow--light" data-cy="scene-tag">
@@ -68,6 +74,16 @@ export default function SceneScreen({ step, profile, choices, timedOut, showFeed
 
         {!showFeedback && (
           <>
+            {risk && (
+              <aside className="card card--risk" data-cy="risk-card" aria-live="polite">
+                <p className="eyebrow">🧭 Dur ve düşün</p>
+                <p>Seçmeden önce bir soru: {decision.hints[1]}</p>
+                <p className="risk-badge" data-cy="risk-badge">
+                  Uyum modeli v{risk.surum} · bu kararda acele etme olasılığın %{Math.round(risk.p * 100)}
+                </p>
+              </aside>
+            )}
+
             {profile.level === 'experienced' && (
               <Countdown seconds={DECISION_SECONDS} onExpire={() => onChoose(TIMEOUT_CHOICE, true)} />
             )}
@@ -91,7 +107,7 @@ export default function SceneScreen({ step, profile, choices, timedOut, showFeed
               ))}
             </div>
 
-            <TutorPanel decision={decision} profile={profile} choices={previous} />
+            <TutorPanel decision={decision} profile={profile} choices={previous} onSend={onTutorMessage} />
           </>
         )}
 

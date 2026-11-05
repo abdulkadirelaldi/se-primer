@@ -9,15 +9,17 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p cypress",
     "cy:open": "cypress open",
-    "test:e2e": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts\"",
+    "test:e2e": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/paths.cy.ts,cypress/e2e/personalization.cy.ts,cypress/e2e/tutor.cy.ts,cypress/e2e/model.cy.ts\"",
     "demo:video": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/demo.cy.ts --config video=true\"",
     "eval": "tsx --env-file-if-exists=.env.local eval/run-eval.ts",
     "eval:report": "tsx eval/report.ts",
-    "start": "NODE_ENV=production node --env-file-if-exists=.env.local server.ts"
+    "start": "NODE_ENV=production node --env-file-if-exists=.env.local server.ts",
+    "build:pages": "tsc --noEmit && vite build --base=/se-primer/ && mkdir -p dist/model && cp model/model.onnx model/config.json dist/model/"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
     "express": "^5.3.0",
+    "onnxruntime-web": "^1.31.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

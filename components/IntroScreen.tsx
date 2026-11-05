@@ -1,10 +1,12 @@
 import { SCENARIO_TITLE } from '../game/story';
+import VeriPanel from './VeriPanel';
 
 interface Props {
   onStart: () => void;
+  veriModu?: boolean;
 }
 
-export default function IntroScreen({ onStart }: Props) {
+export default function IntroScreen({ onStart, veriModu }: Props) {
   return (
     <main className="screen screen--dark intro" data-cy="screen-intro">
       <p className="eyebrow eyebrow--light">YZM301 · Oynanan bir kitap</p>
@@ -22,6 +24,7 @@ export default function IntroScreen({ onStart }: Props) {
           <li>Cevabı söylemeyen, soru soran AI tutor</li>
         </ul>
       </div>
+      {veriModu && <VeriPanel />}
       <button className="btn btn--primary btn--block" data-cy="start-btn" onClick={onStart}>
         Nöbeti devral
       </button>
