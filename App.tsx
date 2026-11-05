@@ -3,7 +3,7 @@ import type { Choice, Profile } from './types';
 import { initialState, transition } from './game/machine';
 import { sceneFeatures, oturumSatirlari, type SceneLog } from './game/telemetry';
 import { oyunSayisi, oyunTamamlandi, rastgeleKimlik, depo, satirEkle, veriModuAcik } from './game/veri';
-import { loadRiskModel } from './services/riskModel';
+import { kanaryadaMi, loadRiskModel } from './services/riskModel';
 import IntroScreen from './components/IntroScreen';
 import ProfileScreen from './components/ProfileScreen';
 import SceneScreen from './components/SceneScreen';
@@ -15,6 +15,8 @@ export interface RiskState {
   p: number;
   esik: number;
   surum: string;
+  /** Eval kapısının gerçek veri koşulunu (E4) henüz geçmemiş model: üretimde yalnız gölgede çalışır. */
+  taslak: boolean;
 }
 
 export default function App() {
@@ -45,7 +47,7 @@ function Game() {
         const p = await model.predict(f);
         if (iptal) return;
         logs.current[step].p = p;
-        setRisk({ step, p, esik: model.config.karar_esigi, surum: model.config.version });
+        setRisk({ step, p, esik: model.config.karar_esigi, surum: model.config.version, taslak: model.config.surum_turu !== 'yayin' });
       } catch (err) {
         console.warn('[risk] Tahmin yapılamadı:', err);
       }
@@ -97,8 +99,12 @@ function Game() {
     if (log) log.tutorCount += 1;
   };
 
-  // Gölge mod: veri toplanırken model tahmin eder ve kaydeder ama oyunu değiştirmez (veri, modelin etkisinden temiz kalsın).
-  const aktifRisk = !veriModu && risk && risk.step === state.step && risk.p >= risk.esik ? risk : null;
+  // Gölge mod: model tahmin eder ve kaydeder ama oyunu değiştirmez.
+  //  - Veri toplanırken (veri, modelin etkisinden temiz kalsın)
+  //  - Üretimde taslak modelle (spec.md §10: taslak model yayınlanmaz)
+  //  - Aşamalı geçişte kovası dışında kalan cihazlarda (RELEASE.md › kanarya)
+  const golge = veriModu || (import.meta.env.PROD && risk?.taslak) || !kanaryadaMi();
+  const aktifRisk = !golge && risk && risk.step === state.step && risk.p >= risk.esik ? risk : null;
 
   return (
     <div className="app">

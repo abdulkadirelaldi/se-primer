@@ -7,6 +7,29 @@
 /** Yayınlanan sürüm: commit'e sabitlenmiş Hugging Face URL'si (RELEASE.md). Boşsa uygulamayla birlikte gelen model/ kullanılır. */
 export const HF_MODEL_BASE = '';
 
+/**
+ * Aşamalı geçiş (RELEASE.md): modelin oyunu değiştirdiği cihazların yüzdesi. 5 → 25 → 50 → 100.
+ * Kovanın dışındaki cihazlarda model gölgede çalışır (tahmin eder, kart göstermez).
+ */
+export const YAYILIM_YUZDESI = 100;
+
+/** Cihaza bir kez atanan rastgele kova (0–99). Kişisel veri değildir; cihazdan çıkmaz. */
+export function cihazKovasi(): number {
+  try {
+    const kayitli = localStorage.getItem('seprimer.kova');
+    if (kayitli !== null) return Number(kayitli);
+    const kova = crypto.getRandomValues(new Uint8Array(1))[0] % 100;
+    localStorage.setItem('seprimer.kova', String(kova));
+    return kova;
+  } catch {
+    return 0;
+  }
+}
+
+export function kanaryadaMi(yuzde = YAYILIM_YUZDESI): boolean {
+  return cihazKovasi() < yuzde;
+}
+
 export interface ModelConfig {
   version: string;
   surum_turu: string;

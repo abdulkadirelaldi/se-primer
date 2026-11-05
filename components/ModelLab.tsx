@@ -10,9 +10,12 @@ export default function ModelLab() {
   const [girdi, setGirdi] = useState<Record<string, string>>({});
   const [p, setP] = useState<number | null>(null);
   const [hata, setHata] = useState('');
+  const [sure, setSure] = useState<{ yukleme?: number; cikarim?: number }>({});
 
   useEffect(() => {
+    const t0 = performance.now();
     void loadRiskModel().then((m) => {
+      setSure({ yukleme: performance.now() - t0 });
       setModel(m);
       if (m) setGirdi(Object.fromEntries(m.config.features.map((f) => [f.name, String(f.example)])));
     });
@@ -22,7 +25,11 @@ export default function ModelLab() {
     if (!model) return;
     setHata('');
     try {
-      setP(await model.predict(Object.fromEntries(Object.entries(girdi).map(([k, v]) => [k, Number(v)]))));
+      const f = Object.fromEntries(Object.entries(girdi).map(([k, v]) => [k, Number(v)]));
+      const t0 = performance.now();
+      const sonuc = await model.predict(f);
+      setSure((s) => ({ ...s, cikarim: performance.now() - t0 }));
+      setP(sonuc);
     } catch (err) {
       setP(null);
       setHata(String(err));
@@ -62,6 +69,9 @@ export default function ModelLab() {
               <p className="muted small">p(riskli seçim)</p>
               <p className="lab__p" data-cy="p">
                 {p.toFixed(6)}
+              </p>
+              <p className="muted small" data-cy="lab-sure">
+                Model + çalışma zamanı yükleme {sure.yukleme?.toFixed(0)} ms · çıkarım {sure.cikarim?.toFixed(2)} ms (bu cihazda)
               </p>
               <p data-cy="lab-karar">
                 {p >= model.config.karar_esigi ? '🧭 Dur ve düşün kartı gösterilir' : 'v1 davranışı (kart yok)'}
