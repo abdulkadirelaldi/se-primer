@@ -1,0 +1,136 @@
+{
+  "title": "SE Primer · Kötü sona gitme riski",
+  "description": "Her karar sahnesi açılırken oyuncunun riskli seçeneği (B) seçme olasılığı.",
+  "version": "2.0.0",
+  "surum_turu": "taslak",
+  "target": "riskli_secim",
+  "classes": [
+    0,
+    1
+  ],
+  "class_labels": {
+    "0": "güvenli (A)",
+    "1": "riskli (B)"
+  },
+  "positive_class_index": 1,
+  "karar_esigi": 0.5,
+  "model_sahneleri": [
+    2,
+    3
+  ],
+  "onnx": {
+    "input": "input",
+    "input_dtype": "float32",
+    "outputs": [
+      "label",
+      "probabilities"
+    ],
+    "opset": 17
+  },
+  "features": [
+    {
+      "name": "sahne_no",
+      "label": "Sahne (karar) numarası",
+      "unit": "2 ya da 3",
+      "min": 2,
+      "max": 3,
+      "example": 2
+    },
+    {
+      "name": "seviye",
+      "label": "Beyan edilen seviye",
+      "unit": "0 yeni · 1 orta · 2 deneyimli",
+      "min": 0,
+      "max": 2,
+      "example": 0
+    },
+    {
+      "name": "onceki_oyun_sayisi",
+      "label": "Bu cihazda daha önce tamamlanan oyun",
+      "unit": "adet",
+      "min": 0,
+      "max": 50,
+      "example": 0
+    },
+    {
+      "name": "onceki_riskli_sayisi",
+      "label": "Bu oturumda önceki riskli seçim",
+      "unit": "adet (0–2)",
+      "min": 0,
+      "max": 2,
+      "example": 1
+    },
+    {
+      "name": "onceki_karar_suresi_sn",
+      "label": "Önceki sahnede karar süresi",
+      "unit": "saniye",
+      "min": 0,
+      "max": 600,
+      "example": 4
+    },
+    {
+      "name": "onceki_okuma_suresi_sn",
+      "label": "Önceki geri bildirimi okuma süresi",
+      "unit": "saniye",
+      "min": 0,
+      "max": 600,
+      "example": 2
+    },
+    {
+      "name": "tutor_mesaj_sayisi",
+      "label": "O ana kadar tutor'a mesaj/ipucu isteği",
+      "unit": "adet",
+      "min": 0,
+      "max": 50,
+      "example": 0
+    }
+  ],
+  "esikler": {
+    "roc_auc": 0.75,
+    "dengeli_dogruluk": 0.7,
+    "onnx_fark": 0.0001,
+    "gercek_oturum": 15
+  },
+  "metrics": {
+    "test": {
+      "n": 192,
+      "pozitif_orani": 0.3698,
+      "roc_auc": 0.8035,
+      "dengeli_dogruluk": 0.7359,
+      "dogruluk": 0.7552,
+      "cogunluk_taban_dogruluk": 0.6302,
+      "brier": 0.1759
+    },
+    "gercek_test": null,
+    "onnx_sklearn_maks_fark": 5.96e-08,
+    "kapi_gecti": false
+  },
+  "katsayilar": {
+    "sahne_no": -0.3434,
+    "seviye": 0.1521,
+    "onceki_oyun_sayisi": -0.4542,
+    "onceki_riskli_sayisi": 0.4829,
+    "onceki_karar_suresi_sn": -0.544,
+    "onceki_okuma_suresi_sn": -0.2931,
+    "tutor_mesaj_sayisi": -0.2421,
+    "(sabit)": -0.849
+  },
+  "data": {
+    "dosya": "data/oturumlar.csv",
+    "sha256": "13d47e333704db083ea95d5f6453eb1707d55b306e8dabb652bcd62cb9a02921",
+    "n_satir": 1113,
+    "n_model_satir": 742,
+    "n_gercek_satir": 0,
+    "n_gercek_oturum": 0,
+    "n_gercek_katilimci": 0,
+    "n_sentetik_satir": 1113,
+    "bolme": "GroupShuffleSplit(katilimci_id, test_size=0.25)",
+    "n_egitim": 550,
+    "n_test": 192
+  },
+  "seed": 42,
+  "sklearn_version": "1.9.1",
+  "skl2onnx_version": "1.20.0",
+  "onnxruntime_version": "1.31.1",
+  "python_version": "3.12.13"
+}

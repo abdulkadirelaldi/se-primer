@@ -241,7 +241,7 @@ Bir yazılım mühendisi adayı için en pahalı hata, baskı altında **“hız
 | | |
 |---|---|
 | **Soru** | Bu oyuncu, bu sahnede riskli seçeneği (B) seçecek mi? |
-| **Ne zaman** | Her karar sahnesi açılırken. Yalnızca o ana kadar bilinen davranış kullanılır; bu sahnedeki karar süresi kullanılmaz (sızıntı olurdu). |
+| **Ne zaman** | **Karar 2 ve 3** açılırken (bkz. Revizyon 1). Yalnızca o ana kadar bilinen davranış kullanılır; bu sahnedeki karar süresi kullanılmaz (sızıntı olurdu). Karar 1'de oyuncu henüz gözlenmediği için model çalışmaz, v1 kuralları geçerlidir. |
 | **Hedef (`riskli_secim`)** | 1 = oyuncu B'yi seçti ya da süre doldu ve B uygulandı · 0 = A seçildi |
 | **Model türü** | Tabular veri, `StandardScaler` + `LogisticRegression` (sklearn) → `model.onnx` |
 | **Çıktı** | `p` = P(riskli_secim = 1), 0–1 arası olasılık |
@@ -250,12 +250,12 @@ Bir yazılım mühendisi adayı için en pahalı hata, baskı altında **“hız
 
 | # | Özellik | Neden |
 |---|---|---|
-| 1 | `sahne_no` | 1–3. Kararların doğası ve oyunun ilerleyişi farklı. |
+| 1 | `sahne_no` | 2 ya da 3. Kararların doğası ve oyunun ilerleyişi farklı. |
 | 2 | `seviye` | 0 = yeni, 1 = orta, 2 = deneyimli. Oyuncunun kendi beyanı. |
 | 3 | `onceki_oyun_sayisi` | Bu cihazda daha önce tamamlanan oyun sayısı. Öğrenme etkisini yakalar. |
 | 4 | `onceki_riskli_sayisi` | Bu oturumda o ana kadar yapılan riskli seçim sayısı. |
-| 5 | `onceki_karar_suresi_sn` | Bir önceki sahnede karar için harcanan süre. Acele ya da tereddüt sinyali. Sahne 1'de 0. |
-| 6 | `onceki_okuma_suresi_sn` | Bir önceki “Ne oldu / Neden oldu” ekranında geçen süre. Sahne 1'de 0. |
+| 5 | `onceki_karar_suresi_sn` | Bir önceki sahnede karar için harcanan süre. Acele ya da tereddüt sinyali. |
+| 6 | `onceki_okuma_suresi_sn` | Bir önceki “Ne oldu / Neden oldu” ekranında geçen süre. |
 | 7 | `tutor_mesaj_sayisi` | O ana kadar tutor'a gönderilen mesaj ve ipucu isteği sayısı. |
 
 **Oyun davranışı nasıl değişir** (`karar_esigi` = 0,5, `config.json`'da):
@@ -287,9 +287,24 @@ Değişiklik bilerek **eklemeli** tutuldu: v1'in hiçbir öğesi (ipucu kartı, 
 
 **Neden bu eşikler?** Model yanlış pozitif verdiğinde zararı küçük: oyuncu fazladan bir Sokratik kart görür. Yanlış negatifte ise v1 davranışına düşülür. Bu yüzden yüksek kesinlik değil, rastgeleden açıkça iyi bir sıralama (AUC 0,75) yeterli kabul edildi.
 
+### Revizyon 1 · Soğuk başlangıç (ilk eğitimden sonra, eşikler değişmeden)
+
+İlk `train.py` koşusu **eval kapısından geçemedi** ve model yayınlanmadı. Kapı tam olarak bunun için vardı.
+
+| Deneme | Kapsam | ROC-AUC | Dengeli doğruluk | Sonuç |
+|---|---|---:|---:|---|
+| 1 | Karar 1–3 | 0,711 | 0,631 | ✗ E1, E2 sağlanmadı |
+| 2 | Karar 2–3 | 0,804 | 0,736 | ✓ |
+
+**Teşhis:** Karar 1'de AUC 0,574, yani yazı-tura düzeyinde. Oyuncu henüz hiç davranış göstermediği için “önceki” özelliklerin hepsi 0. Karar 2–3'te aynı model AUC 0,762'ye ulaşıyor. Model türünü değiştirmek (sınıf ağırlığı, logaritmik süre, karar ağacı) sonucu iyileştirmedi; sorun bilgi eksikliğiydi. Bu, öneri sistemlerindeki **soğuk başlangıç (cold start)** problemidir.
+
+**Karar:** Model yalnızca oyuncu gözlendikten sonra, yani Karar 2 ve 3'te çalışır. Karar 1'de v1 kuralları (seviyeye göre ipucu ve süre) geçerlidir. Bu bir ürün kararıdır: kimseyi hiç gözlemeden “aceleci” diye etiketlememek gerekir.
+
+**Değişmeyenler:** E1–E4 eşikleri, metrikler, ayırma yöntemi ve tohum aynı kaldı. Sentetik veri üreticisine dokunulmadı.
+
 ## 11. Veri gizliliği (KVKK)
 
-- Veri yalnızca **Veri Toplama Modu**'nda (`?veri=1`) ve yalnızca oynanan cihazda (`localStorage`) toplanır. Normal oyunda hiçbir davranış verisi saklanmaz, hiçbir yere gönderilmez.
+- Veri yalnızca **Veri Toplama Modu**'nda (`?veri=1`) ve yalnızca oynanan cihazda (`localStorage`) toplanır. Normal oyunda davranış verisi saklanmaz ve hiçbir yere gönderilmez. Tek istisna, modelin `onceki_oyun_sayisi` özelliği için bu cihazda tamamlanan oyun sayısını tutan yerel bir sayaçtır; bu sayaç cihazdan çıkmaz.
 - Ad, e-posta, cihaz kimliği, IP, konum ve tarih-saat **toplanmaz**. Oturum ve katılımcı kimlikleri rastgele üretilir (`K-7F3A` gibi) ve bir kişiyle eşleştirilemez.
 - Tutor'a yazılan metinlerin içeriği değil, yalnızca **sayısı** kaydedilir.
 - Model tarayıcıda çalışır. Oyuncunun davranış verisi cihazdan çıkmaz (bkz. `RELEASE.md` › ödünleşim matrisi).
