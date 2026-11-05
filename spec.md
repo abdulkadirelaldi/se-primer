@@ -302,6 +302,24 @@ Değişiklik bilerek **eklemeli** tutuldu: v1'in hiçbir öğesi (ipucu kartı, 
 
 **Değişmeyenler:** E1–E4 eşikleri, metrikler, ayırma yöntemi ve tohum aynı kaldı. Sentetik veri üreticisine dokunulmadı.
 
+### Revizyon 2 · Eşik sınırındaki model (5 gerçek oturum eklendikten sonra, eşikler değişmeden)
+
+İlk 5 gerçek oturum eklenince katılımcıya göre ayırmanın seçtiği test kümesi değişti ve dengeli doğruluk 0,736'dan **0,673**'e düştü (E2 ✗). Bunun model mi şans mı olduğunu anlamak için aynı model **30 farklı gruplu ayırmada** ölçüldü:
+
+| Model | AUC ortalama (min–maks) | Dengeli doğruluk ortalama (min–maks) | E2'yi geçen ayırma |
+|---|---|---|---|
+| Lojistik regresyon | 0,772 (0,679–0,820) | 0,688 (0,614–0,745) | 12/30 |
+| + `class_weight="balanced"` | 0,771 (0,678–0,820) | **0,698** (0,620–0,765) | 16/30 |
+
+**Bulgu:** Deneme 2'deki “geçti” sonucu kısmen şanslı bir ayırmaydı. Model AUC'de eşiği güvenle geçiyor, ama 0,5 karar eşiğindeki dengeli doğrulukta tam sınırda. Tek bir ayırmaya dayanan kapının sonucu yüksek varyanslı.
+
+**Karar:**
+1. Sınıflar dengesiz olduğu (~%35 riskli) için model `class_weight="balanced"` ile eğitilir. Bu karar, 30 ayırmanın **ortalamasına** bakılarak verildi; spec'teki tohum-42 ayırmasının sonucuna bakılmadı.
+2. Kapı, §10'da yazıldığı gibi (tohum 42, tek ayırma) gerçek veri tamamlandığında **bir kez** koşulur. Geçerse yayınlanır, geçmezse yayınlanmaz. Tohum seçilmez, eşik değişmez.
+3. 30 ayırmalık dağılım, sonuç ne olursa olsun model kartına yazılır.
+
+**Gelecek sürüm için ders:** Kapı, tek ayırma yerine tekrarlı gruplu çapraz doğrulamanın ortalamasıyla tanımlanmalı. Bu v2.1'in spec'ine eğitimden önce yazılacak.
+
 ## 11. Veri gizliliği (KVKK)
 
 - Veri yalnızca **Veri Toplama Modu**'nda (`?veri=1`) ve yalnızca oynanan cihazda (`localStorage`) toplanır. Normal oyunda davranış verisi saklanmaz ve hiçbir yere gönderilmez. Tek istisna, modelin `onceki_oyun_sayisi` özelliği için bu cihazda tamamlanan oyun sayısını tutan yerel bir sayaçtır; bu sayaç cihazdan çıkmaz.
