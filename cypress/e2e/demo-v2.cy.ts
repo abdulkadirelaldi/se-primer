@@ -16,10 +16,10 @@ function oyna(o: { baslik: string; seviye: string; secim: 'A' | 'B'; kararMs: nu
   cy.document().then((d) => {
     const etiket = d.createElement('div');
     etiket.textContent = o.baslik;
-    etiket.setAttribute('style', 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;background:#F0A35E;color:#13203B;font:700 14px Inter,sans-serif;padding:6px 12px;border-radius:999px');
+    etiket.setAttribute('style', 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:99;background:#F0A35E;color:#13203B;font:700 14px Inter,sans-serif;padding:6px 12px;border-radius:999px');
     d.body.appendChild(etiket);
   });
-  yavas(1800);
+  yavas(2500);
   cy.get('[data-cy=start-btn]').click();
   yavas(600);
   cy.get(`[data-cy=opt-level-${o.seviye}]`).click();
@@ -38,7 +38,7 @@ function oyna(o: { baslik: string; seviye: string; secim: 'A' | 'B'; kararMs: nu
   cy.tick(o.kararMs);
   cy.get(`[data-cy=choice-${o.secim}]`).scrollIntoView({ duration: 300 }).click();
   cy.get('[data-cy=feedback]').scrollIntoView({ duration: 400 });
-  yavas(o.okumaMs > 5000 ? 3500 : 1200);
+  yavas(o.okumaMs > 5000 ? 4500 : 2000);
   cy.tick(o.okumaMs);
   cy.get('[data-cy=next-btn]').scrollIntoView({ duration: 300 }).click();
   cy.get('[data-cy=screen-scene]', { timeout: 20000 }).should('have.attr', 'data-risk-p');
@@ -49,14 +49,14 @@ describe('SE Primer v2 · demo', () => {
   it('Karar 2: aceleci oyuncuya “Dur ve düşün”, dikkatli oyuncuya v1', () => {
     oyna({ baslik: 'Oyuncu 1 · ilk oyun · 4 sn’de B · geri bildirimi 2 sn okudu', seviye: 'beginner', secim: 'B', kararMs: 4000, okumaMs: 2000, tutor: 0 });
     cy.get('[data-cy=risk-card]').should('be.visible').scrollIntoView({ duration: 500 });
-    yavas(6000);
+    yavas(8000);
     cy.get('[data-cy=choice-A]').scrollIntoView({ duration: 500 });
     yavas(2500);
 
     oyna({ baslik: 'Oyuncu 2 · 4. oyun · 25 sn düşündü, A · 20 sn okudu · tutor ×2', seviye: 'experienced', secim: 'A', kararMs: 25000, okumaMs: 20000, tutor: 2 });
     cy.get('[data-cy=risk-card]').should('not.exist');
     cy.get('[data-cy=scene-prompt]').scrollIntoView({ duration: 500 });
-    yavas(5000);
+    yavas(7000);
     cy.get('[data-cy=choice-A]').scrollIntoView({ duration: 500 });
     yavas(2500);
 
@@ -71,7 +71,7 @@ describe('SE Primer v2 · demo', () => {
         });
         cy.get('[data-cy=hesapla]').scrollIntoView({ duration: 300 }).click();
         cy.get('[data-cy=p]').scrollIntoView({ duration: 400 });
-        yavas(4000);
+        yavas(5000);
       });
     });
   });

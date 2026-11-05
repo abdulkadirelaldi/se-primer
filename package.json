@@ -16,7 +16,10 @@
     "start": "NODE_ENV=production node --env-file-if-exists=.env.local server.ts",
     "build:pages": "tsc --noEmit && vite build --base=/se-primer/ && mkdir -p dist/model && cp model/model.onnx model/config.json dist/model/",
     "test:model": ".venv/bin/python tests/test_egitim.py && .venv/bin/python tests/parite.py",
-    "demo:v2": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/demo-v2.cy.ts --config video=true\""
+    "demo:v2": "start-server-and-test dev http://localhost:3000/api/health \"cypress run --spec cypress/e2e/demo-v2.cy.ts --config video=true\"",
+    "py:kur": "uv venv --python 3.12 .venv && uv pip install --python .venv -r requirements.txt",
+    "veri": ".venv/bin/python data/hazirla.py",
+    "egit": ".venv/bin/python train.py"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
