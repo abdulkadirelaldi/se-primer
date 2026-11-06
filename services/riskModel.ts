@@ -5,7 +5,7 @@
  */
 
 /** Yayınlanan sürüm: commit'e sabitlenmiş Hugging Face URL'si (RELEASE.md). Boşsa uygulamayla birlikte gelen model/ kullanılır. */
-export const HF_MODEL_BASE = '';
+export const HF_MODEL_BASE = 'https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx/resolve/abbf7f019bc9f521e2a94d681655e2dccc820a1f/';
 
 /**
  * Aşamalı geçiş (RELEASE.md): modelin oyunu değiştirdiği cihazların yüzdesi. 5 → 25 → 50 → 100.

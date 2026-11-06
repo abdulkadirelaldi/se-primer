@@ -5,6 +5,8 @@ tags: [tabular-classification, sklearn, onnx, education, se-primer]
 language: [tr]
 ---
 
+> ⚠️ **ADAY SÜRÜM (v2.0.0-rc1).** Eval kapısının E4 koşulu (≥ 15 gerçek oturum) henüz sağlanmadı. Tüketiciler bu modeli **yalnızca gölge modda** çalıştırır: tahmin eder ve kaydeder, oyunu değiştirmez (spec.md › Revizyon 3).
+
 # SE Primer · Kötü sona gitme riski modeli (v2.0.0 · TASLAK)
 
 Model kartı (Mitchell vd., 2019 yapısında). Kaynak kod ve veri: https://github.com/abdulkadirelaldi/se-primer
@@ -76,4 +78,4 @@ ONNX girdisi `input`, float32 `[n, 7]` (sütun sırası aşağıdaki gibidir). �
 ## Sürüm
 `2.0.0` · sklearn 1.9.1 · skl2onnx 1.20.0 · Python 3.12.13
 Tüketiciler modeli `main`'den değil, commit'e sabitlenmiş URL'den indirir:
-`https://huggingface.co/<repo_id>/resolve/<commit>/model.onnx`
+`https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx/resolve/<commit>/model.onnx`

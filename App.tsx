@@ -103,7 +103,9 @@ function Game() {
   //  - Veri toplanırken (veri, modelin etkisinden temiz kalsın)
   //  - Üretimde taslak modelle (spec.md §10: taslak model yayınlanmaz)
   //  - Aşamalı geçişte kovası dışında kalan cihazlarda (RELEASE.md › kanarya)
-  const golge = veriModu || (import.meta.env.PROD && risk?.taslak) || !kanaryadaMi();
+  //  Önizleme (?onizleme=1): test kullanıcıları (ör. değerlendirici) aday modeli aktif görür — iç kanarya.
+  const onizleme = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('onizleme') === '1';
+  const golge = veriModu || (import.meta.env.PROD && risk?.taslak && !onizleme) || (!kanaryadaMi() && !onizleme);
   const aktifRisk = !golge && risk && risk.step === state.step && risk.p >= risk.esik ? risk : null;
 
   return (
