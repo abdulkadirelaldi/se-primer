@@ -320,6 +320,17 @@ Değişiklik bilerek **eklemeli** tutuldu: v1'in hiçbir öğesi (ipucu kartı, 
 
 **Gelecek sürüm için ders:** Kapı, tek ayırma yerine tekrarlı gruplu çapraz doğrulamanın ortalamasıyla tanımlanmalı. Bu v2.1'in spec'ine eğitimden önce yazılacak.
 
+### Revizyon 3 · “Yayın” iki ayrı adımdır: aday ve terfi
+
+§10'daki “yayınlanmaz” ifadesi iki farklı şeyi karıştırıyordu. Yeni tanım:
+
+| Adım | Koşul | Ne olur |
+|---|---|---|
+| **Aday (rc) yayını** | E0–E3 geçildi | Artefakt Hugging Face'e `vX.Y.Z-rcN` etiketiyle yüklenir. Tüketiciler commit'e sabitlenir ve modeli **yalnızca gölgede** çalıştırır: tahmin yapılır ve kaydedilir, oyun değişmez. |
+| **Terfi (yayın)** | E0–E4 geçildi (`surum_turu = yayin`) | `vX.Y.Z` etiketi. Model oyunu değiştirir (kart) ve kanarya → aşamalı geçiş başlar (`RELEASE.md`). |
+
+Gerekçe: Gölge dağıtım, adayın gerçek kullanıcıların yanında *çalışmasını* gerektirir; çalışmak için de bir yerde yayınlanmış olması gerekir. Bu, model kayıt defterlerindeki (registry) “aday” ve “production” aşamalarının karşılığıdır. E4'ün koruduğu şey oyuncuyu etkilemektir; bu koruma aynen geçerlidir.
+
 ## 11. Veri gizliliği (KVKK)
 
 - Veri yalnızca **Veri Toplama Modu**'nda (`?veri=1`) ve yalnızca oynanan cihazda (`localStorage`) toplanır. Normal oyunda davranış verisi saklanmaz ve hiçbir yere gönderilmez. Tek istisna, modelin `onceki_oyun_sayisi` özelliği için bu cihazda tamamlanan oyun sayısını tutan yerel bir sayaçtır; bu sayaç cihazdan çıkmaz.
