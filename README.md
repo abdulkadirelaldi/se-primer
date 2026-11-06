@@ -9,9 +9,12 @@ YZM301 · 2. ödev (The Primer v2) · v1: [docs/v1-README.md](docs/v1-README.md)
 
 | | |
 |---|---|
-| 📱 **Canlı uygulama** (giriş gerekmez) | https://abdulkadirelaldi.github.io/se-primer/ · model laboratuvarı: [`?lab=1`](https://abdulkadirelaldi.github.io/se-primer/?lab=1) |
-| 🤗 **Hugging Face modeli** (commit'e sabit) | bkz. [RELEASE.md › Yayın kaydı](RELEASE.md#yayın-kaydı-v200) · [`model/YAYIN.json`](model/YAYIN.json) |
-| 🎬 **Demo video** (aynı sahne, iki oyuncu, iki karar) | [demo/se-primer-v2-demo.mp4](demo/se-primer-v2-demo.mp4) |
+| 📱 **Canlı uygulama** (giriş gerekmez) | https://abdulkadirelaldi.github.io/se-primer/ |
+| 👩‍🏫 **Değerlendirici için** (aday modeli aktif görür) | https://abdulkadirelaldi.github.io/se-primer/?onizleme=1 · model laboratuvarı ve 300 girdilik diferansiyel test: [`?lab=1`](https://abdulkadirelaldi.github.io/se-primer/?lab=1) |
+| 🤗 **Hugging Face modeli** (commit'e sabit) | https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx/resolve/abbf7f019bc9f521e2a94d681655e2dccc820a1f/model.onnx · etiket `v2.0.0-rc1` |
+| 🎬 **Demo video** (65 sn · canlı site · aynı sahne, iki oyuncu, iki karar) | [demo/se-primer-v2-demo.mp4](demo/se-primer-v2-demo.mp4) |
+
+> **Durum (dürüstçe):** Model **v2.0.0-rc1 (aday)**. Eval kapısının E0–E3 koşulları geçildi; E4 (≥ 15 gerçek oturum) için 5/15 oturum toplandı. Spec gereği aday model normal oyunculara **gölgede** çalışır (tahmin eder, kart göstermez); `?onizleme=1` ile açanlar kartı görür. Terfi planı: [RELEASE.md](RELEASE.md#v200--terfi-e4-sağlandığında).
 | 📦 **Repo** | https://github.com/abdulkadirelaldi/se-primer |
 
 ## Kurulum (3 komut)
@@ -26,8 +29,9 @@ npm run dev          # http://localhost:3000 · Express + Vite
 |---|---|
 | `npm run veri` | `data/oturumlar.csv`'yi üretir: sentetik (tohum 42) + `data/gercek/*.csv` |
 | `npm run egit` | **`train.py`** · eğit → ölç → eval kapısı → `model/` (eşik altıysa çıkış kodu 1, `model/` değişmez) |
-| `npm run test:model` | KÖ-6 (kapı + tekrarlanabilirlik) ve test kahini paritesi (Python) |
-| `npm run test:e2e` | Cypress: v1 regresyon (25) + model (6) + sunucu (2) |
+| `npm run test:model` | KÖ-6 (kapı, veri doğrulama, tekrarlanabilirlik) · test kahini (5 + 300 girdi) · davranışsal testler |
+| `npm run test:e2e` | Cypress: v1 regresyon (25) + model (7) + sunucu (3) |
+| `npm run rapor` | `model/DEGERLENDIRME.md`: 30 ayırma, taban çizgileri, kalibrasyon, gerçek ve sentetik veri karşılaştırması |
 | `.venv/bin/python yayinla.py` | Hugging Face'e yükle → etiketle → commit'e sabitli URL'den doğrula → tüketicileri sabitle |
 
 ## Ne yaptık: altı adım
@@ -36,10 +40,10 @@ npm run dev          # http://localhost:3000 · Express + Vite
 |---|---|---|
 | **1 · Spec** | Model gereksinimi, eval metriği ve kabul eşiği (ROC-AUC ≥ 0,75, dengeli doğruluk ≥ 0,70, ONNX farkı ≤ 1e-4, ≥ 15 gerçek oturum), 3 yeni kabul örneği (KÖ-6/7/8). Eşikler **eğitimden önce** ayrı bir commit'te yazıldı (`9416295`). | [spec.md §8–12](spec.md#v2--davranıştan-öğrenen-uyum-kötü-sona-gitme-riski-modeli) |
 | **2 · Veri** | Her karar bir satır. Gerçek oturumlar uygulamanın **Veri Toplama Modu** ile (`?veri=1`, kişisel veri yok), sentetik oturumlar tohumlu üreticiyle. `kaynak` sütunu zorunlu. | [data/oturumlar.csv](data/oturumlar.csv) · [data/SOZLUK.md](data/SOZLUK.md) · [data/hazirla.py](data/hazirla.py) |
-| **3 · Eğit ve ölç** | `train.py` tek komut, `random_state=42`, katılımcıya göre gruplu ayırma. Metrikleri `config.json`'a yazar, eşik altında durur. İki koşuda ve Linux CI'da birebir aynı metrik. | [train.py](train.py) · [tests/test_egitim.py](tests/test_egitim.py) |
+| **3 · Eğit ve ölç** | `train.py` tek komut, `random_state=42`, katılımcıya göre gruplu ayırma. Önce veriyi doğrular (E0), metrikleri `config.json`'a yazar, eşik altında durur. İki koşuda ve Linux CI'da birebir aynı metrik. Ek rapor: 30 ayırma ve 3 taban çizgisi. | [train.py](train.py) · [tests/test_egitim.py](tests/test_egitim.py) · [model/DEGERLENDIRME.md](model/DEGERLENDIRME.md) |
 | **4 · Paketle** | `model.onnx` (573 bayt) + sözleşme `config.json` (özellik sırası, sınıflar, eşik, metrikler, veri sha256, sürümler) + model kartı | [model/](model/) |
-| **5 · Yayınla** | Hugging Face public repo, commit'e sabitli URL, `RELEASE.md`: rollback, gölge/kanarya/aşamalı geçiş, ödünleşim matrisi | [RELEASE.md](RELEASE.md) · [yayinla.py](yayinla.py) |
-| **6 · Tüket ve test et** | Tarayıcıda `onnxruntime-web` ile çıkarım; model kararı oyunu değiştiriyor. Diferansiyel test: tarayıcı ve sunucu, Python test kahiniyle 5 girdide < 1e-4. v1 E2E testleri değişmeden geçiyor. | [services/riskModel.ts](services/riskModel.ts) · [tests/parite.py](tests/parite.py) · [tests/parite.json](tests/parite.json) · [cypress/e2e/](cypress/e2e/) |
+| **5 · Yayınla** | [Hugging Face](https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx) public repo, commit `abbf7f0` ve etiket `v2.0.0-rc1`. Yükleme sonrası geri indirilip byte ve parite doğrulandı. `RELEASE.md`: rollback, gölge (gerçekten uygulandı) / kanarya / aşamalı geçiş, canlıda ölçülmüş ödünleşim matrisi | [RELEASE.md](RELEASE.md) · [yayinla.py](yayinla.py) · [model/YAYIN.json](model/YAYIN.json) |
+| **6 · Tüket ve test et** | Tarayıcıda `onnxruntime-web` ile çıkarım; model kararı oyunu değiştiriyor. Diferansiyel test: tarayıcı ve sunucu, Python test kahiniyle 5 referans girdide ve **300 girdide** (30'u eşik çevresinde) < 1e-4, karar uyuşması 300/300. v1 E2E testleri değişmeden geçiyor. | [services/riskModel.ts](services/riskModel.ts) · [tests/parite.py](tests/parite.py) · [tests/parite.json](tests/parite.json) · [tests/parite300.json](tests/parite300.json) · [cypress/e2e/](cypress/e2e/) |
 | **7 · Sınav tasarımı** | Öğrenciye uyumlanan, gerekçe ölçen 1 sayfalık vize sorusu | [SINAV_TASARIMI.md](SINAV_TASARIMI.md) |
 
 ## Model: “Kötü sona gitme riski”
@@ -84,7 +88,11 @@ Model `a`'yı göremez, yalnızca davranışa yansıyan izlerini görür. Bu kur
 | **KÖ-6** Eval kapısı, tekrarlanabilirlik | `tests/test_egitim.py` | Python (yerel + Linux CI) |
 | **KÖ-7** İki oyuncu, iki karar; model yoksa v1 | `model.cy.ts` (cy.clock ile süreler kesin) | Cypress |
 | **KÖ-8** Diferansiyel test < 1e-4 | `model.cy.ts` (tarayıcı) · `sunucu.cy.ts` (sunucu) · `tests/parite.py` (kahin, `--url` ile HF) | Cypress + Python |
+| **300 girdi** (10 köşe, 120 tam aralık, 140 gerçekçi, 30 eşik çevresi) | `model.cy.ts` · `sunucu.cy.ts` (`/api/risk/toplu`) · `tests/parite.py` | Cypress + Python |
+| Davranışsal (CheckList: MFT, INV, DIR) | `tests/test_davranis.py` | Python |
+| Veri doğrulama (E0) | `tests/test_egitim.py` (bozuk veri senaryosu) | Python |
 | Veri Toplama Modu, gölge, KVKK | `model.cy.ts` | Cypress |
+| Canlı yayın: HF commit'inden yükleme, 300/300 parite, gölge ve önizleme | `canli.cy.ts` (GitHub Pages'e karşı) | Cypress |
 
 Hepsi her push'ta [CI](.github/workflows/ci.yml)'da koşar. Canlı site de aynı testlerle doğrulandı (`--config baseUrl=https://abdulkadirelaldi.github.io/se-primer`).
 
@@ -107,10 +115,12 @@ Hepsi her push'ta [CI](.github/workflows/ci.yml)'da koşar. Canlı site de aynı
 ## Yapay zekâ araçlarının kullanımı (beyan)
 
 - **Claude Code (Anthropic):** Kodun ve belgelerin büyük kısmını yazdı. Ödevi parçalara ayırdım, model hedefini (“kötü sona gitme riski”) ve eşikleri birlikte belirledik, her adımın çıktısını test ve ölçümle doğruladık.
-- **Ajanın yanlışlarının yakalanıp düzeltildiği yerler:**
+- **Ajanın ilk çıktısında yakalanıp düzeltilen yerler:**
   - İlk model eval kapısından geçemedi. Eşiği düşürmek yerine soğuk başlangıç teşhisiyle kapsam daraltıldı.
   - Çok ortamlı CI'da ONNX farkının CPU'ya göre değiştiği görüldü; tekrarlanabilirlik testi buna göre düzeltildi.
   - `RELEASE.md`'de kanarya mekanizmasının “test edildiği” yazıyordu; test olmadığı için bu iddia çıkarıldı.
+  - İlk 300 girdilik test kümesinde yalnızca 6 girdi eşik üstündeydi. Asıl risk eşik çevresinde olduğu için küme katmanlandırıldı (30 eşik çevresi girdisi).
+  - İlk “geçti” sonucunun kısmen şanslı bir ayırma olduğu 30 ayırmalık ölçümle ortaya çıktı. Tohum seçilmedi, bulgu spec'e Revizyon 2 olarak yazıldı.
 - **Google AI Studio (Gemini):** v1'de tutor'un sunucuya taşınması ve 20 mesajlık tutor eval'inin koşturulması. Gemini'nin eklediği kullanılmayan Live API ve doğrulamasız uç nokta incelenip kaldırıldı.
 - **Google Stitch:** v1'in 3 mobil ekranı (`design/stitch/`).
 - **Fikir kaynakları:** ONNX sözleşmesi, `onnx_aktar` eşdeğerlik kontrolü ve tüketici örüntüleri `seyyah/huggingface-hello-web`'den uyarlandı. Mimari tartışma kaynakları: [RELEASE.md › Kaynaklar](RELEASE.md#kaynaklar).

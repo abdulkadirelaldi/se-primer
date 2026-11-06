@@ -6,7 +6,8 @@
 |---|---|---|---|
 | **v1.0** (git etiketi `v1.0`) | Kural tabanlı uyum: girişteki 3 soruya göre ipucu ve süre baskısı | Yok | GitHub, AI Studio |
 | **v2.0.0-taslak** | Model yalnızca sentetik veriyle eğitildi; E4 (≥ 15 gerçek oturum) sağlanmadı | `model/` (taslak) | Yalnızca uygulamayla birlikte paketli, **gölge modda**: tahmin eder, kaydeder, oyunu değiştirmez. Hugging Face'e **yüklenmedi**. |
-| **v2.0.0** | Gerçek + sentetik veriyle eğitildi; E1–E4 geçildi | Hugging Face, commit'e sabitli | Bkz. aşağıdaki yayın kaydı |
+| **v2.0.0-rc1** | Sınıf ağırlıklı model, 5 gerçek + sentetik veri; E0–E3 geçildi, E4 5/15 | Hugging Face `abbf7f0`, etiket `v2.0.0-rc1` | Canlıda **gölge**; `?onizleme=1` ile aktif. Bkz. yayın kaydı |
+| **v2.0.0** | E4 sağlandığında terfi | — | Planlandı |
 
 ## v2.0'da ne değişti
 
@@ -16,18 +17,30 @@
 - **Üç tüketici, tek sözleşme.** Tarayıcı (`onnxruntime-web`), sunucu (`POST /api/risk`, `onnxruntime-node`) ve test kahini (Python `onnxruntime`), `tests/parite.json`'daki 5 girdide < 1e-4 farkla aynı sonucu verir.
 - **Eval kapısı.** `train.py` eşik altında çıkış kodu 1 ile durur. İlk deneme (Karar 1–3, AUC 0,711) bu kapıda reddedildi (`spec.md` › Revizyon 1).
 
-## Yayın kaydı (v2.0.0)
+## Yayın kaydı
 
-> Bu bölüm `yayinla.py` çıktısından doldurulur. Kesin değerler `model/YAYIN.json` dosyasındadır.
+### v2.0.0-rc1 · aday (yalnız gölge) · **şu an canlıda**
 
 | | |
 |---|---|
-| Hugging Face reposu | `YAYIN_REPO` |
-| Commit (sabit) | `YAYIN_COMMIT` |
-| Etiket | `v2.0.0` |
-| Tüketicilerin indirdiği URL | `YAYIN_BASE` + `model.onnx` / `config.json` |
-| Model sha256 | `YAYIN_SHA` |
-| Veri sha256 | `model/config.json › data.sha256` |
+| Hugging Face reposu | https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx |
+| Commit (sabit) | `abbf7f019bc9f521e2a94d681655e2dccc820a1f` |
+| Etiket | `v2.0.0-rc1` |
+| Tüketicilerin indirdiği URL | `https://huggingface.co/abdulkadirelaldi/se-primer-risk-onnx/resolve/abbf7f019bc9f521e2a94d681655e2dccc820a1f/model.onnx` (+ `config.json`) |
+| Model sha256 | `1adf60622c2669d407a174206407cd9db6a7fed28981f95f3a107dbc56141d89` |
+| Eval kapısı | E0 ✓ · E1 AUC 0,763 ✓ · E2 dengeli doğruluk 0,703 ✓ (sınırda, bkz. Revizyon 2) · E3 1,2e-7 ✓ · **E4 5/15 gerçek oturum ✗** |
+| Yayından sonra doğrulama | `yayinla.py` commit URL'sinden geri indirdi: 3 dosya byte düzeyinde aynı; 5 + 300 girdide parite. Canlı sitede `cypress/e2e/canli.cy.ts`: model HF commit'inden yükleniyor, 300/300 parite, normal oyuncuda gölge, `?onizleme=1`'de kart. |
+
+Tarayıcı tüketicisi (`services/riskModel.ts › HF_MODEL_BASE`), sunucu tüketicisi (`MODEL_BASE` ortam değişkeni) ve test kahini (`tests/parite.py --url`) aynı commit'e sabitli. Kesin değerler: [`model/YAYIN.json`](model/YAYIN.json).
+
+**Neden aday?** E4 (≥ 15 gerçek oturum) henüz sağlanmadı. `spec.md` › Revizyon 3'e göre aday, yalnızca gölgede çalışır. Değerlendirici `?onizleme=1` ile adayı aktif görebilir (iç kanarya).
+
+### v2.0.0 · terfi (E4 sağlandığında)
+
+1. Gerçek oturumlar ≥ 15 olunca: `npm run veri && npm run egit`. Spec protokolü **bir kez** koşulur (Revizyon 2).
+2. Geçerse: `python tests/parite.py --yaz && python yayinla.py` → yeni commit, etiket `v2.0.0`, tüketiciler yeni commit'e sabitlenir.
+3. `YAYILIM_YUZDESI = 5` (kanarya) ile başlanır → %25 → %50 → %100 (aşağıda).
+4. Geçmezse: rc1 gölgede kalır, kart hiç kimseye açılmaz.
 
 **Neden `main` değil, commit?** `main` hareketli bir işaretçidir. Biri HF'ye yeni bir model yüklediği anda, sabitlenmemiş bütün tüketiciler sessizce yeni modele geçer. Oysa yeni modelin ne eval'i ne paritesi bu uygulama için yapılmıştır. Commit'e sabitlenen URL'nin içeriği değişmez (Sommerville Bl. 25: konfigürasyon yönetimi, temel çizgi/baseline). Bu, Shankar vd. (2022)'nin üç V'sinden **Versioning** sorununun somut karşılığıdır: kod (`git`), veri (`config.json › data.sha256`) ve model (HF commit) birlikte sürümlenir.
 
@@ -42,7 +55,7 @@ Sorun tanımı (geri alma tetikleyicileri):
 |---|---|---|---|
 | **0 · Tek kullanıcı** | URL'ye `?model=kapali` | Anında | O oyuncu v1 davranışına döner. Destek ve hata ayıklama içindir. |
 | **1 · Model kapalı (kill switch)** | `services/riskModel.ts` › `YAYILIM_YUZDESI = 0` → push → Pages iş akışı | ~2 dk | Model herkes için gölgeye geçer; oyun v1 gibi davranır, tahminler kaydedilmeye devam eder. |
-| **2 · Önceki modele dön** | `HF_MODEL_BASE`'i bir önceki sürümün commit URL'sine çevir, `tests/parite.json`'u o sürüme göre üret (`parite.py --url … --yaz`) → push | ~5 dk | v2.0.0 ilk model olduğu için “önceki sürüm” düzey 1'dir (v1 davranışı). v2.1'den itibaren v2.0.0 commit'i geri dönüş noktasıdır. |
+| **2 · Önceki modele dön** | `HF_MODEL_BASE`'i bir önceki sürümün commit URL'sine çevir, `tests/parite.json`'u o sürüme göre üret (`parite.py --url … --yaz`) → push | ~5 dk | v2.0.0 terfi ettikten sonra geri dönüş noktası rc1 commit'idir (`abbf7f0`); rc1'in öncesinde model yoktu, yani daha geri gitmek düzey 1'dir (v1 davranışı). |
 | **3 · Kodu geri al** | `git revert <commit>` ya da `git checkout v1.0` → push | ~5 dk | Uygulama tamamen v1'e döner. |
 
 Hugging Face'teki eski commit'ler silinmez. Bu yüzden geri alma her zaman yeni bir yükleme yapmadan, yalnızca **işaretçiyi değiştirerek** yapılır.
@@ -50,7 +63,9 @@ Hugging Face'teki eski commit'ler silinmez. Bu yüzden geri alma her zaman yeni 
 ## Yeni sürümü güvenle devreye alma
 
 ### 1 · Gölge dağıtım (Shadow): **yapıldı**
-Veri toplama boyunca v2.0.0-taslak modeli gerçek oyunlarda **sessizce** çalıştı. Her karar için tahminini (`model_p`) kaydetti ama oyunu değiştirmedi; oyuncu kartı hiç görmedi. Böylece modelin kararları gerçek davranışla, oyuncuyu etkilemeden kıyaslanabildi. Ölçüm, gerçek oturumlardaki Karar 2–3 satırlarında `model_p` ile gerçek `riskli_secim` arasındaki uyumdur (bkz. model kartı ve aşağıdaki tablo). Gölge modun ikinci faydası, eğitim verisinin modelin kendi etkisiyle kirlenmemesidir (geri besleme döngüsü).
+Veri toplama boyunca v2.0.0-taslak modeli gerçek oyunlarda **sessizce** çalıştı. Her karar için tahminini (`model_p`) kaydetti ama oyunu değiştirmedi; oyuncu kartı hiç görmedi. Bugün rc1 de canlıda aynı şekilde gölgede çalışıyor.
+
+**Gölge sonucu** (`model/DEGERLENDIRME.md` §4): 5 gerçek oturumun 10 Karar 2–3 kararında gölge model kartı **10/10** kararda gösterecekti. Gerçek oyuncular bu 10 kararın 8'inde riskli seçeneği seçti (eşik 0,5'te isabet 0,80). Asıl öğretici bulgu ise şu: gerçek oyuncuların karar süresi medyanı **0,8 sn**, sentetik varsayımda 17,3 sn. Gölge dağıtım tam olarak bunu yakalamak içindir. Bu kayma doğrudan yayına çıkılsaydı, kart neredeyse herkese açılacaktı. Bu nedenle terfi, gerçek veriyle yeniden eğitime bağlandı. Gölge modun ikinci faydası, eğitim verisinin modelin kendi etkisiyle kirlenmemesidir (geri besleme döngüsü).
 
 ### 2 · Kanarya (Canary): %5
 Her cihaz ilk açılışta rastgele bir kova alır (0–99, `localStorage`, kişisel veri değil). `YAYILIM_YUZDESI = 5` iken yalnızca 0–4 kovasındaki cihazlarda kart gösterilir; diğer %95'te model gölgede çalışır. Bir hafta boyunca karşılaştırılacaklar:
@@ -67,7 +82,7 @@ Kanarya ölçütleri tutarsa `YAYILIM_YUZDESI` sırayla 25, 50 ve 100'e çıkar�
 
 | | **Tarayıcı** (`onnxruntime-web`) ✅ seçildi | **Cihaz içi mobil** (Expo + `onnxruntime-react-native`, gömülü) | **Kendi sunucumuz** (Express + `onnxruntime-node`, `POST /api/risk`; Render.com) |
 |---|---|---|---|
-| **1 · İnternet zorunlu mu, gecikme?** | İlk açılışta model (573 B) + çalışma zamanı (wasm, ~3,9 MB gzip) iner. Yerelde ölçülen yükleme 353 ms; mobil ağda saniyeler sürebilir. Sonra **her tahmin ~0,5 ms ve ağsız**. | Model uygulamaya gömülü: **tamamen internetsiz**, gecikme yok. Ama uygulama mağaza/APK ile dağıtılır, güncellemesi yavaştır. | **Her tahminde ağ turu** gerekir (onlarca–yüzlerce ms). Render ücretsiz katmanında uykudan uyanma 30 sn'yi aşabilir. İnternet yoksa çalışmaz. |
+| **1 · İnternet zorunlu mu, gecikme?** | İlk açılışta model (573 B, Hugging Face) + çalışma zamanı (wasm, ~3,9 MB gzip, GitHub Pages) iner. **Canlıda ölçülen** ilk yükleme 680–830 ms (geniş bantlı ağ; mobil ağda saniyeler sürebilir). Sonra **her tahmin 0,3–0,5 ms ve ağsız**. | Model uygulamaya gömülü: **tamamen internetsiz**, gecikme yok. Ama uygulama mağaza/APK ile dağıtılır, güncellemesi yavaştır. | **Her tahminde ağ turu** gerekir (onlarca–yüzlerce ms). Render ücretsiz katmanında uykudan uyanma 30 sn'yi aşabilir. İnternet yoksa çalışmaz. |
 | **2 · Veri cihazdan çıkar mı?** (KVKK) | **Hayır.** Davranış verisi tarayıcıda kalır; sunucuya hiçbir şey gitmez. Veri minimizasyonu ilkesine en uygun seçenek. | **Hayır.** | **Evet.** Her tahminde oyuncunun davranış özellikleri sunucuya gider. Anonim olsa da aktarım, kayıt ve saklama politikası gerektirir. |
 | **3 · Model gizli kalır mı?** | **Hayır.** `model.onnx` herkesin indirebileceği bir dosyadır; katsayılar okunabilir. | **Hayır.** APK açılıp model çıkarılabilir. | **Evet**, dosya sunucuda kalır. Ama istek-yanıt üzerinden çok sayıda sorguyla model taklit edilebilir (tersine mühendislik / model çıkarma, REA). Hız sınırı gerekir. |
 | Maliyet | Sıfır (GitHub Pages + HF Hub) | Sıfır (ama mağaza ve derleme zahmeti) | Ücretsiz katman, uyuma ve kota sınırlarıyla |
