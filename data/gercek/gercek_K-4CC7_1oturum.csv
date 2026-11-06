@@ -1,0 +1,4 @@
+oturum_id,katilimci_id,kaynak,seviye,rol,hedef,sahne_no,onceki_oyun_sayisi,onceki_riskli_sayisi,onceki_karar_suresi_sn,onceki_okuma_suresi_sn,tutor_mesaj_sayisi,karar_suresi_sn,okuma_suresi_sn,secim,zaman_asimi,riskli_secim,model_p,model_surumu
+o-1CB5D623,K-4CC7,gercek,0,qa,security,1,0,0,0,0,0,11.6,4.2,A,0,0,,
+o-1CB5D623,K-4CC7,gercek,0,qa,security,2,0,0,11.6,4.2,0,3.3,0.9,A,0,0,0.597848,2.0.0
+o-1CB5D623,K-4CC7,gercek,0,qa,security,3,0,0,3.3,0.9,0,0.9,2.7,B,0,1,0.545212,2.0.0

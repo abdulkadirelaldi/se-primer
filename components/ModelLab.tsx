@@ -11,6 +11,7 @@ export default function ModelLab() {
   const [p, setP] = useState<number | null>(null);
   const [hata, setHata] = useState('');
   const [sure, setSure] = useState<{ yukleme?: number; cikarim?: number }>({});
+  const [toplu, setToplu] = useState<{ n: number; maks: number; kararUyusan: number; tolerans: number } | null>(null);
 
   useEffect(() => {
     const t0 = performance.now();
@@ -34,6 +35,22 @@ export default function ModelLab() {
       setP(null);
       setHata(String(err));
     }
+  }
+
+  /** 300 girdilik diferansiyel test: tests/parite300.json'daki kahin olasılıklarıyla karşılaştır. */
+  async function topluTest() {
+    if (!model) return;
+    const r = await fetch(`${import.meta.env.BASE_URL}tests/parite300.json`);
+    const d = (await r.json()) as { ozellikler: string[]; girdiler: number[][]; p_beklenen: number[]; tolerans: number };
+    const sira = model.config.features.map((f) => d.ozellikler.indexOf(f.name));
+    const p = await model.predictBatch(d.girdiler.map((g) => sira.map((i) => g[i])));
+    const esik = model.config.karar_esigi;
+    setToplu({
+      n: p.length,
+      maks: Math.max(...p.map((v, i) => Math.abs(v - d.p_beklenen[i]))),
+      kararUyusan: p.filter((v, i) => v >= esik === d.p_beklenen[i] >= esik).length,
+      tolerans: d.tolerans,
+    });
   }
 
   return (
@@ -79,6 +96,21 @@ export default function ModelLab() {
             </section>
           )}
           {hata && <p className="badge badge--warn">{hata}</p>}
+          <button className="btn btn--ghost btn--block" data-cy="toplu-btn" onClick={() => void topluTest()}>
+            300 girdilik diferansiyel test
+          </button>
+          {toplu && (
+            <section className="card" data-cy="toplu-sonuc">
+              <p>
+                <b data-cy="toplu-n">{toplu.n}</b> girdi · maks |p<sub>tarayıcı</sub> − p<sub>python</sub>| ={' '}
+                <b data-cy="toplu-maks">{toplu.maks.toExponential(2)}</b> (tolerans {toplu.tolerans})
+              </p>
+              <p>
+                Karar uyuşması: <b data-cy="toplu-karar">{toplu.kararUyusan}</b>/{toplu.n} ·{' '}
+                {toplu.maks < toplu.tolerans && toplu.kararUyusan === toplu.n ? '✓ geçti' : '✗ kaldı'}
+              </p>
+            </section>
+          )}
         </>
       )}
     </main>

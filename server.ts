@@ -10,7 +10,7 @@ import type { ChatMessage, Choice, Level, Role, Goal } from './types.ts';
 import { DECISIONS } from './game/story.ts';
 import { LIMITS, type TutorApiResponse } from './services/tutor.ts';
 import { apiKey, geminiTutorReply } from './services/tutor.server.ts';
-import { GirdiHatasi, MODEL_BASE, riskTahmin } from './services/riskModel.server.ts';
+import { GirdiHatasi, MODEL_BASE, riskTahmin, riskTopluTahmin } from './services/riskModel.server.ts';
 
 const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -21,7 +21,7 @@ const ROLES: Role[] = ['backend', 'qa', 'devops'];
 const GOALS: Goal[] = ['architecture', 'testing', 'security'];
 
 const app = express();
-app.use(express.json({ limit: '32kb' }));
+app.use(express.json({ limit: '256kb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', tutor: apiKey ? 'gemini' : 'offline' });
@@ -34,6 +34,16 @@ app.post('/api/risk', async (req, res) => {
   } catch (err) {
     if (err instanceof GirdiHatasi) return res.status(400).json({ error: err.message });
     console.warn('[server] risk modeli hatası:', (err as Error)?.message ?? err);
+    return res.status(503).json({ error: 'Model şu an kullanılamıyor' });
+  }
+});
+
+// Diferansiyel test için: {"rows": [[...7 sayı...], ...]} → {"p": [...], "version": "2.0.0"}
+app.post('/api/risk/toplu', async (req, res) => {
+  try {
+    return res.json(await riskTopluTahmin(req.body?.rows));
+  } catch (err) {
+    if (err instanceof GirdiHatasi) return res.status(400).json({ error: err.message });
     return res.status(503).json({ error: 'Model şu an kullanılamıyor' });
   }
 });

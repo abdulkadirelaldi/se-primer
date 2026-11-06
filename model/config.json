@@ -93,40 +93,48 @@
   },
   "metrics": {
     "test": {
-      "n": 192,
-      "pozitif_orani": 0.3698,
-      "roc_auc": 0.8035,
-      "dengeli_dogruluk": 0.7359,
-      "dogruluk": 0.7552,
-      "cogunluk_taban_dogruluk": 0.6302,
-      "brier": 0.1759
+      "n": 178,
+      "pozitif_orani": 0.3427,
+      "roc_auc": 0.7632,
+      "dengeli_dogruluk": 0.7032,
+      "dogruluk": 0.7079,
+      "cogunluk_taban_dogruluk": 0.6573,
+      "brier": 0.1981
     },
-    "gercek_test": null,
-    "onnx_sklearn_maks_fark": 5.96e-08,
+    "gercek_test": {
+      "n": 4,
+      "pozitif_orani": 0.75,
+      "roc_auc": 0.0,
+      "dengeli_dogruluk": 0.5,
+      "dogruluk": 0.75,
+      "cogunluk_taban_dogruluk": 0.75,
+      "brier": 0.2184
+    },
+    "onnx_sklearn_maks_fark": 1.192e-07,
     "kapi_gecti": false
   },
   "katsayilar": {
-    "sahne_no": -0.3434,
-    "seviye": 0.1521,
-    "onceki_oyun_sayisi": -0.4542,
-    "onceki_riskli_sayisi": 0.4829,
-    "onceki_karar_suresi_sn": -0.544,
-    "onceki_okuma_suresi_sn": -0.2931,
-    "tutor_mesaj_sayisi": -0.2421,
-    "(sabit)": -0.849
+    "sahne_no": -0.3803,
+    "seviye": 0.211,
+    "onceki_oyun_sayisi": -0.4901,
+    "onceki_riskli_sayisi": 0.5673,
+    "onceki_karar_suresi_sn": -0.5921,
+    "onceki_okuma_suresi_sn": -0.1708,
+    "tutor_mesaj_sayisi": -0.2949,
+    "(sabit)": -0.2011
   },
   "data": {
     "dosya": "data/oturumlar.csv",
-    "sha256": "13d47e333704db083ea95d5f6453eb1707d55b306e8dabb652bcd62cb9a02921",
-    "n_satir": 1113,
-    "n_model_satir": 742,
-    "n_gercek_satir": 0,
-    "n_gercek_oturum": 0,
-    "n_gercek_katilimci": 0,
+    "sha256": "b104b0fa5c1eb3b0a894fed207e9f81c882a5852ca73fc73f9039b3928c1cc33",
+    "n_satir": 1128,
+    "n_model_satir": 752,
+    "n_gercek_satir": 15,
+    "n_gercek_oturum": 5,
+    "n_gercek_katilimci": 5,
     "n_sentetik_satir": 1113,
     "bolme": "GroupShuffleSplit(katilimci_id, test_size=0.25)",
-    "n_egitim": 550,
-    "n_test": 192
+    "n_egitim": 574,
+    "n_test": 178
   },
   "seed": 42,
   "sklearn_version": "1.9.1",

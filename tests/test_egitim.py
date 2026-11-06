@@ -37,6 +37,18 @@ def main() -> int:
         else:
             print("✓ eşik altı: çıkış kodu 1, artefakt yazılmadı")
 
+        # E0: sözleşme dışı ya da çelişkili veri eğitime girmez
+        import pandas as pd
+        bozuk = pd.read_csv(KOK / "data" / "oturumlar.csv")
+        bozuk.loc[bozuk.index[4], "onceki_okuma_suresi_sn"] = -3          # aralık dışı
+        bozuk.loc[bozuk.index[7], "secim"] = "A" if bozuk.loc[bozuk.index[7], "riskli_secim"] else "B"  # çelişki
+        bozuk.to_csv(t / "bozuk.csv", index=False)
+        r = egit("--veri", str(t / "bozuk.csv"), "--cikti", str(t / "bozuk"))
+        if r.returncode != 1 or "E0" not in r.stdout or "çelişiyor" not in r.stdout or (t / "bozuk").exists():
+            hatalar.append(f"bozuk veri yakalanmadı: {r.stdout[-300:]}")
+        else:
+            print("✓ veri doğrulama (E0): aralık dışı ve çelişkili satır yakalandı, eğitim başlamadı")
+
         a, b = egit("--cikti", str(t / "a")), egit("--cikti", str(t / "b"))
         if a.returncode or b.returncode:
             hatalar.append(f"normal eğitim başarısız: {a.stdout[-300:]}")

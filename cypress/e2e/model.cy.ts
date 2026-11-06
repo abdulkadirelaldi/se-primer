@@ -129,3 +129,15 @@ describe('Veri Toplama Modu (?veri=1) · gölge dağıtım', () => {
     cy.get('[data-cy=veri-sil]').should('contain', 'Emin misin');
   });
 });
+
+describe('300 girdilik diferansiyel test (ders provası): tarayıcı = Python test kahini', () => {
+  it('300 girdinin hepsinde |fark| < 1e-4 ve karar uyuşması 300/300 (30 tanesi eşik çevresinde)', () => {
+    cy.visit('/?lab=1');
+    cy.get('[data-cy=lab-durum]', { timeout: 20000 }).should('contain', 'kaynak');
+    cy.get('[data-cy=toplu-btn]').click();
+    cy.get('[data-cy=toplu-n]', { timeout: 20000 }).should('have.text', '300');
+    cy.get('[data-cy=toplu-maks]').invoke('text').then((t) => expect(Number(t)).to.be.lessThan(1e-4));
+    cy.get('[data-cy=toplu-karar]').should('have.text', '300');
+    cy.get('[data-cy=toplu-sonuc]').should('contain', '✓ geçti');
+  });
+});

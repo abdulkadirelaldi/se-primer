@@ -15,8 +15,10 @@ jobs:
       - run: uv venv --python 3.12 .venv && uv pip install --python .venv -r requirements.txt
       - name: KÖ-6 · eval kapısı + başka ortamda aynı metrik
         run: .venv/bin/python tests/test_egitim.py
-      - name: Test kahini · parite.json ↔ model.onnx
+      - name: Test kahini · parite.json (5) + parite300.json (300) ↔ model.onnx
         run: .venv/bin/python tests/parite.py
+      - name: Davranışsal testler (MFT, INV, DIR)
+        run: .venv/bin/python tests/test_davranis.py
 
   e2e:
     name: E2E · regresyon + model + sunucu (Cypress)

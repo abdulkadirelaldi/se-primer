@@ -39,6 +39,20 @@ function yukle() {
 
 export class GirdiHatasi extends Error {}
 
+/** Toplu çıkarım (diferansiyel test): satırlar config.features sırasında, en çok 1000 satır. */
+export async function riskTopluTahmin(rows: unknown): Promise<{ p: number[]; version: string }> {
+  const { config, session } = await yukle();
+  const n = config.features.length;
+  if (!Array.isArray(rows) || rows.length === 0 || rows.length > 1000) throw new GirdiHatasi('rows: 1–1000 satırlık dizi olmalı');
+  if (!rows.every((r) => Array.isArray(r) && r.length === n && r.every((v) => typeof v === 'number' && Number.isFinite(v)))) {
+    throw new GirdiHatasi(`her satır ${n} sayıdan oluşmalı`);
+  }
+  const x = Float32Array.from((rows as number[][]).flat());
+  const out = await session.run({ [config.onnx.input]: new ort.Tensor('float32', x, [rows.length, n]) }, ['probabilities']);
+  const p = out.probabilities.data as Float32Array;
+  return { p: rows.map((_, i) => Number(p[i * 2 + 1])), version: config.version };
+}
+
 /** Sözleşmeye göre doğrular: her özellik sayı olmalı ve config'deki [min, max] aralığında kalmalı. */
 export async function riskTahmin(inputs: unknown): Promise<{ p: number; karar: 'dur_dusun' | 'v1'; version: string }> {
   const { config, session } = await yukle();

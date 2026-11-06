@@ -68,6 +68,33 @@ def metrikler(y, p) -> dict:
     }
 
 
+def veri_dogrula(veri: pd.DataFrame) -> list[str]:
+    """Şema, aralık ve iç tutarlılık. Boş liste = geçerli."""
+    hatalar: list[str] = []
+    for o in OZELLIKLER:
+        ad, lo, hi = o["name"], o["min"], o["max"]
+        if ad == "sahne_no":
+            lo = 1  # veride Karar 1 satırları da var; model yalnız 2–3'ü kullanır
+        disi = veri[(veri[ad] < lo) | (veri[ad] > hi)]
+        if len(disi):
+            hatalar.append(f"{ad}: {len(disi)} satır [{lo}, {hi}] dışında (ör. oturum {disi['oturum_id'].iloc[0]})")
+    if not veri["kaynak"].isin(["gercek", "sentetik"]).all():
+        hatalar.append("kaynak yalnız 'gercek' ya da 'sentetik' olabilir")
+    if not veri[HEDEF].isin([0, 1]).all():
+        hatalar.append(f"{HEDEF} yalnız 0/1 olabilir")
+    tutarsiz = veri[(veri["secim"] == "B") != (veri[HEDEF] == 1)]
+    if len(tutarsiz):
+        hatalar.append(f"{len(tutarsiz)} satırda secim ile {HEDEF} çelişiyor")
+    sayim = veri.groupby("oturum_id")["sahne_no"].apply(lambda s: sorted(s.tolist()))
+    eksik = sayim[sayim.apply(lambda s: s != [1, 2, 3])]
+    if len(eksik):
+        hatalar.append(f"{len(eksik)} oturumda sahneler 1-2-3 değil (ör. {eksik.index[0]})")
+    ilk = veri[veri["sahne_no"] == 1]
+    if (ilk[["onceki_riskli_sayisi", "onceki_karar_suresi_sn", "onceki_okuma_suresi_sn"]] != 0).any().any():
+        hatalar.append("Karar 1 satırlarında 'onceki_*' alanları 0 olmalı")
+    return hatalar
+
+
 def onnx_aktar(model, X_ornek: pd.DataFrame, hedef_dizin: Path) -> float:
     """Başlangıç reposundaki onnx_aktar ile aynı sözleşme: girdi 'input' float32 [n, özellik], çıktı 'probabilities'."""
     import onnxruntime as ort
@@ -147,6 +174,7 @@ ONNX girdisi `input`, float32 `[n, {len(config['features'])}]` (sütun sırası 
 {katsayi}
 
 ## Sınırlar
+- **Dengeli doğruluk eşik sınırında:** Spec'teki tek ayırma (tohum 42) dışında, 30 farklı gruplu ayırmada dengeli doğruluğun ortalaması 0,698 (0,620–0,765), AUC'nin ortalaması 0,771 idi (Revizyon 2 ölçümü). Kapıyı geçmek, test kümesine düşen katılımcılara bağlı. Bu model “rastgeleden açıkça iyi”, ama “güvenle %70” değil.
 - **Gerçek veri küçük:** gerçek test satırı az olduğundan oradaki metriklerin güven aralığı çok geniş; “yalnız gerçek” sütunu bir gösterge, kanıt değil.
 - **Sentetik veri baskın:** model, `data/hazirla.py`'deki varsayımları (aceleci oyuncu kısa okur ve risk alır) büyük ölçüde öğrenir. Gerçek oyuncular bu kalıba uymayabilir.
 - **Soğuk başlangıç:** Karar 1'de model çalışmaz. İlk deneme (Karar 1–3) eval kapısında AUC 0,711 ile reddedildi; Karar 1'de AUC 0,574'tü (spec.md › Revizyon 1).
@@ -166,6 +194,7 @@ def main() -> int:
     ap.add_argument("--esik-auc", type=float, default=ESIK_AUC)
     ap.add_argument("--esik-bacc", type=float, default=ESIK_BACC)
     ap.add_argument("--cikti", type=Path, default=MODEL_DIR, help="artefakt klasörü (testler geçici klasör verir)")
+    ap.add_argument("--veri", type=Path, default=VERI, help="veri dosyası (testler bozuk veri verir)")
     args = ap.parse_args()
 
     import onnxruntime
@@ -176,7 +205,7 @@ def main() -> int:
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
 
-    tum_veri = pd.read_csv(VERI)
+    tum_veri = pd.read_csv(args.veri)
     veri = tum_veri[tum_veri["sahne_no"].isin(MODEL_SAHNELERI)].reset_index(drop=True)
     adlar = [o["name"] for o in OZELLIKLER]
     eksik = [s for s in adlar + [HEDEF, "kaynak", "katilimci_id", "oturum_id"] if s not in veri.columns]
@@ -187,11 +216,21 @@ def main() -> int:
         print("✗ özelliklerde ya da hedefte boş değer var")
         return 1
 
+    # E0 · Veri doğrulama (Breck vd. 2017, “girdi özellikleri beklenen aralıkta”): sözleşme dışı satır eğitime girmez.
+    dogrulama = veri_dogrula(tum_veri)
+    if dogrulama:
+        print("✗ E0 VERİ DOĞRULAMA: eğitim başlamadı.")
+        for h in dogrulama[:20]:
+            print(f"  - {h}")
+        return 1
+
     X, y, gruplar = veri[adlar].astype("float32"), veri[HEDEF].astype(int).to_numpy(), veri["katilimci_id"]
     egitim_i, test_i = next(GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=TOHUM).split(X, y, gruplar))
     X_tr, X_te, y_tr, y_te = X.iloc[egitim_i], X.iloc[test_i], y[egitim_i], y[test_i]
 
-    model = Pipeline([("olcek", StandardScaler()), ("lr", LogisticRegression(random_state=TOHUM, max_iter=1000))])
+    # Revizyon 2 (spec.md): sınıflar dengesiz (~%35 riskli); 0,5 eşiğinde azınlık sınıfı az tahmin edilmesin.
+    model = Pipeline([("olcek", StandardScaler()),
+                      ("lr", LogisticRegression(random_state=TOHUM, max_iter=1000, class_weight="balanced"))])
     model.fit(X_tr, y_tr)
     p_te = model.predict_proba(X_te)[:, 1]
     m_test = metrikler(y_te, p_te)
@@ -247,7 +286,7 @@ def main() -> int:
             "metrics": {"test": m_test, "gercek_test": m_gercek, "onnx_sklearn_maks_fark": float(f"{fark:.3e}"),
                         "kapi_gecti": n_gercek_oturum >= ESIK_GERCEK_OTURUM},
             "katsayilar": {o["name"]: round(float(c), 4) for o, c in zip(OZELLIKLER, lr.coef_[0])} | {"(sabit)": round(float(lr.intercept_[0]), 4)},
-            "data": {"dosya": "data/oturumlar.csv", "sha256": sha256(VERI), "n_satir": int(len(tum_veri)), "n_model_satir": int(len(veri)),
+            "data": {"dosya": "data/oturumlar.csv", "sha256": sha256(args.veri), "n_satir": int(len(tum_veri)), "n_model_satir": int(len(veri)),
                      "n_gercek_satir": int(len(gercek)), "n_gercek_oturum": n_gercek_oturum,
                      "n_gercek_katilimci": int(gercek["katilimci_id"].nunique()),
                      "n_sentetik_satir": int((tum_veri["kaynak"] == "sentetik").sum()),

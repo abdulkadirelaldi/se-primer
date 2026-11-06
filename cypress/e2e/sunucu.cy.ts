@@ -35,3 +35,20 @@ describe('Sunucu tüketicisi (POST /api/risk) = Python test kahini', () => {
     });
   });
 });
+
+describe('Sunucu · 300 girdilik diferansiyel test', () => {
+  it('POST /api/risk/toplu: 300 girdide |fark| < 1e-4, karar uyuşması 300/300', () => {
+    cy.readFile('tests/parite300.json').then((d: { girdiler: number[][]; p_beklenen: number[]; tolerans: number }) => {
+      cy.readFile('model/config.json').then((config: { karar_esigi: number }) => {
+        cy.request('POST', '/api/risk/toplu', { rows: d.girdiler }).then(({ body }) => {
+          expect(body.p).to.have.length(300);
+          const farklar = body.p.map((p: number, i: number) => Math.abs(p - d.p_beklenen[i]));
+          expect(Math.max(...farklar)).to.be.lessThan(d.tolerans);
+          const esik = config.karar_esigi;
+          const uyusan = body.p.filter((p: number, i: number) => p >= esik === d.p_beklenen[i] >= esik).length;
+          expect(uyusan).to.eq(300);
+        });
+      });
+    });
+  });
+});

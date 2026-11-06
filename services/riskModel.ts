@@ -43,6 +43,8 @@ export interface RiskModel {
   config: ModelConfig;
   base: string;
   predict(features: Record<string, number>): Promise<number>;
+  /** Toplu çıkarım: satırlar config.features sırasında. Diferansiyel testte kullanılır. */
+  predictBatch(rows: number[][]): Promise<number[]>;
 }
 
 export function modelBase(): string {
@@ -87,6 +89,14 @@ export function loadRiskModel(): Promise<RiskModel | null> {
           }));
           const out = await session.run({ [config.onnx.input]: new ort.Tensor('float32', x, [1, x.length]) }, ['probabilities']);
           return Number((out.probabilities.data as Float32Array)[1]);
+        },
+        async predictBatch(rows) {
+          const n = config.features.length;
+          const x = Float32Array.from(rows.flat());
+          if (x.length !== rows.length * n) throw new Error(`Her satırda ${n} özellik olmalı`);
+          const out = await session.run({ [config.onnx.input]: new ort.Tensor('float32', x, [rows.length, n]) }, ['probabilities']);
+          const p = out.probabilities.data as Float32Array;
+          return rows.map((_, i) => Number(p[i * 2 + 1]));
         },
       };
     } catch (err) {
