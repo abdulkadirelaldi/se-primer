@@ -360,10 +360,21 @@ p {
 .lab {
   gap: 12px;
 }
+.lab {
+  overflow-x: hidden;
+}
+.lab code {
+  overflow-wrap: anywhere;
+}
 .lab__field {
   display: grid;
   gap: 4px;
   font-size: 14px;
+  min-width: 0;
+}
+.lab__field input {
+  width: 100%;
+  box-sizing: border-box;
 }
 .lab__field input {
   min-height: 44px;

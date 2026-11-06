@@ -7,7 +7,7 @@ const yavas = (ms: number) => cy.wait(ms);
 
 function oyna(o: { baslik: string; seviye: string; secim: 'A' | 'B'; kararMs: number; okumaMs: number; tutor: number }) {
   cy.clock(Date.now(), ['Date']);
-  cy.visit('/?tutor=offline', {
+  cy.visit('/?tutor=offline&onizleme=1', {
     onBeforeLoad: (w) => {
       w.localStorage.clear();
       if (o.seviye === 'experienced') w.localStorage.setItem('seprimer.oyunSayisi', '3');

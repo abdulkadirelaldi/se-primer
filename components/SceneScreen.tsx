@@ -79,7 +79,7 @@ export default function SceneScreen({ step, profile, choices, timedOut, showFeed
                 <p className="eyebrow">🧭 Dur ve düşün</p>
                 <p>Seçmeden önce bir soru: {decision.hints[1]}</p>
                 <p className="risk-badge" data-cy="risk-badge">
-                  Uyum modeli v{risk.surum} · bu kararda acele etme olasılığın %{Math.round(risk.p * 100)}
+                  Uyum modeli v{risk.surum}{risk.taslak ? ' (aday)' : ''} · bu kararda acele etme eğilimin %{Math.round(risk.p * 100)}
                 </p>
               </aside>
             )}

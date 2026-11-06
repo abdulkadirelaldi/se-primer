@@ -62,7 +62,7 @@ export default function ModelLab() {
       {model && (
         <>
           <p className="muted small" data-cy="lab-durum">
-            v{model.config.version} ({model.config.surum_turu}) · kaynak: <code data-cy="lab-kaynak">{model.base}</code> · karar eşiği{' '}
+            v{model.config.version} ({model.config.surum_turu === 'taslak' ? 'aday · yalnız gölge' : 'yayın'}) · kaynak: <code data-cy="lab-kaynak">{model.base}</code> · karar eşiği{' '}
             {model.config.karar_esigi}
           </p>
           {model.config.features.map((f) => (
